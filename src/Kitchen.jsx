@@ -44,26 +44,46 @@ function Kitchen() {
     }
   }
 
-  // Setup real-time subscription
   useEffect(() => {
-    fetchOrders();
+  fetchOrders();
 
-    const channel = supabase
-      .channel("orders-changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "orders" },
-        (payload) => {
-          console.log("Realtime event:", payload);
-          fetchOrders(); // refresh whenever an order is added/updated
-        }
-      )
-      .subscribe();
+  const channel = supabase
+    .channel("orders-changes")
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "orders" },
+      (payload) => {
+        console.log("New order:", payload.new);
+        setOrders((prev) => [payload.new, ...prev].slice(0, 3)); // add new order to top
+      }
+    )
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "orders" },
+      (payload) => {
+        console.log("Order updated:", payload.new);
+        setOrders((prev) =>
+          prev.map((order) =>
+            order.id === payload.new.id ? payload.new : order
+          )
+        );
+      }
+    )
+    .on(
+      "postgres_changes",
+      { event: "DELETE", schema: "public", table: "orders" },
+      (payload) => {
+        console.log("Order deleted:", payload.old);
+        setOrders((prev) => prev.filter((order) => order.id !== payload.old.id));
+      }
+    )
+    .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
+
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
