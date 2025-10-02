@@ -9,10 +9,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        {/* Kiosk login + order flow */}
         <Route path="/" element={<App />} />
-
-        {/* Kitchen display */}
         <Route path="/kitchen" element={<Kitchen />} />
       </Routes>
     </BrowserRouter>
