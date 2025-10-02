@@ -1,17 +1,20 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import App from './App.jsx'        // Kiosk interface
-import Kitchen from './Kitchen.jsx' // Kitchen Display
-import './input.css'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import App from "./App.jsx";
+import Kitchen from "./Kitchen.jsx";
+import "./input.css";
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<App />} />            {/* Customer/Kiosk App */}
-        <Route path="/kitchen" element={<Kitchen />} /> {/* Kitchen Display */}
+        {/* Kiosk login + order flow */}
+        <Route path="/" element={<App />} />
+
+        {/* Kitchen display */}
+        <Route path="/kitchen" element={<Kitchen />} />
       </Routes>
     </BrowserRouter>
-  </React.StrictMode>,
-)
+  </React.StrictMode>
+);
