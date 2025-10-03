@@ -238,7 +238,7 @@ function Kitchen() {
                   onClick={() => updateOrderStatus(order.id, "Completed")}
                   className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-3 rounded-lg font-bold text-xs transition-colors"
                 >
-                  🏁 DONE
+                  🏁 COMPLETED
                 </button>
                 <button
                   onClick={() => updateOrderStatus(order.id, "Cancelled")}
