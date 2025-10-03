@@ -1159,6 +1159,8 @@ function App() {
         </div>
       </>
     );
-  }
-}
+  } // closes if (currentStep === 'menu')
+
+} // closes function App
+
 export default App;
