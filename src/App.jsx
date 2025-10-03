@@ -700,134 +700,158 @@ function App() {
   }
   // Receipt Step
   if (currentStep === 'receipt') {
-    return (
-      <div className="max-w-md mx-auto p-4 bg-white min-h-screen print:shadow-none" id="receipt">
-        {/* Header */}
-        <div className="text-center border-b-4 border-double border-black pb-4 mb-6">
-          <h1 className="text-3xl font-black text-black mb-2">JOHNNY & JUGNU</h1>
-          <p className="text-base font-bold text-gray-800">OFFICIAL RECEIPT</p>
-          <div className="bg-white text-black px-4 py-2 mt-3 inline-block rounded">
-            <p className="text-xl font-black">ORDER #JJ{orderNumber}</p>
-          </div>
-          <p className="text-sm font-semibold mt-2">{new Date().toLocaleString()}</p>
+  return (
+    <div className="max-w-md mx-auto p-4 bg-white min-h-screen print:shadow-none" id="receipt">
+      {/* Header */}
+      <div className="text-center border-b-4 border-double border-black pb-4 mb-6">
+        <h1 className="text-3xl font-black text-black mb-2">JOHNNY & JUGNU</h1>
+        <p className="text-base font-bold text-gray-800">OFFICIAL RECEIPT</p>
+        <div className="bg-white text-black px-4 py-2 mt-3 inline-block rounded">
+          <p className="text-xl font-black">ORDER #JJ{orderNumber}</p>
         </div>
-
-        {/* Staff & Customer Info */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-blue-50 p-3 rounded-lg border-2 border-blue-200">
-            <h3 className="font-black text-blue-800 mb-2 text-sm">CASHIER DETAILS</h3>
-            <p className="text-xs font-bold">Name: {cashierInfo.name}</p>
-            <p className="text-xs font-bold">ID: {cashierInfo.id}</p>
-          </div>
-          <div className="bg-green-50 p-3 rounded-lg border-2 border-green-200">
-            <h3 className="font-black text-green-800 mb-2 text-sm">CUSTOMER INFO</h3>
-            <p className="text-xs font-bold">Name: {customerInfo.name}</p>
-            <p className="text-xs font-bold">Phone: {customerInfo.phone}</p>
-          </div>
-        </div>
-
-        {/* Order Details */}
-        <div className="bg-orange-50 p-3 rounded-lg border-2 border-orange-200 mb-6">
-          <div className="grid grid-cols-2 gap-2 text-xs font-bold">
-            <p>Type: <span className="text-orange-800">{orderType.toUpperCase()}</span></p>
-            <p>Payment: <span className="text-orange-800">{paymentMethod === 'cash' ? 'CASH' : paymentMethod === 'credit' ? 'CREDIT CARD' : 'ONLINE PAYMENT'}</span></p>
-            {orderType === 'delivery' && customerInfo.address && (
-              <p className="col-span-2">Address: <span className="text-orange-800">{customerInfo.address}</span></p>
-            )}
-            {customerInfo.instructions && (
-              <p className="col-span-2">Instructions: <span className="text-orange-800">{customerInfo.instructions}</span></p>
-            )}
-          </div>
-        </div>
-
-        {/* Order Items */}
-        <div className="border-4 border-double border-black p-4 mb-6">
-          <h3 className="font-black text-lg mb-4 text-center bg-black text-white py-2 -mx-4 -mt-4 mb-4">ORDER ITEMS</h3>
-          {cart.map((item, index) => (
-            <div key={index} className="mb-4 pb-3 border-b-2 border-dashed border-gray-400 last:border-b-0">
-              <div className="flex justify-between items-start mb-2">
-                <div className="flex-1">
-                  <p className="font-black text-base">{item.name}</p>
-                  {item.withSeasoning && <span className="bg-green-500 text-white px-2 py-1 text-xs font-bold rounded">WITH SEASONING</span>}
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="bg-blue-500 text-white px-2 py-1 text-xs font-bold rounded">QTY: {item.quantity}</span>
-                    <span className="text-sm font-bold">× PKR {item.finalPrice}</span>
-                  </div>
-                  {item.remarks && (
-                    <div className="mt-2 bg-yellow-100 p-2 rounded border border-yellow-400">
-                      <p className="text-xs font-bold text-yellow-800">REMARKS: {item.remarks}</p>
-                    </div>
-                  )}
-                </div>
-                <div className="text-right ml-2">
-                  <p className="font-black text-lg">PKR {item.finalPrice * item.quantity}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Totals */}
-        <div className="bg-gray-100 p-4 rounded-lg border-4 border-double border-gray-800 mb-6">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-base font-bold">
-              <span>SUBTOTAL:</span>
-              <span>PKR {cart.reduce((total, item) => total + (item.finalPrice * item.quantity), 0)}</span>
-            </div>
-            {deliveryCharges > 0 && (
-              <div className="flex justify-between items-center text-base font-bold text-blue-600">
-                <span>DELIVERY CHARGES:</span>
-                <span>PKR {deliveryCharges}</span>
-              </div>
-            )}
-            <div className="border-t-4 border-double border-black pt-2 mt-3">
-              <div className="flex justify-between items-center">
-                <span className="text-2xl font-black">GRAND TOTAL:</span>
-                <span className="text-2xl font-black bg-black text-white px-4 py-2 rounded">PKR {getTotalPrice()}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center border-4 border-double border-black p-4 mb-6">
-          <p className="font-black text-lg mb-2">THANK YOU FOR YOUR ORDER!</p>
-          <p className="font-bold text-base text-orange-600">Estimated Time: 15-20 minutes</p>
-          <p className="text-xs font-bold mt-2 text-gray-600">Order saved to system database</p>
-        </div>
-
-        <div className="flex gap-2 print:hidden">
-          <button
-            onClick={printOrder}
-            className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold"
-          >
-            🖨️ PRINT
-          </button>
-          <button
-            onClick={downloadReceiptAsImage}
-            className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold"
-          >
-            💾 DOWNLOAD
-          </button>
-          <button
-            onClick={startNewOrder}
-            className="flex-1 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-bold"
-          >
-            ➕ NEW ORDER
-          </button>
-        </div>
-
-        <style jsx>{`
-          @media print {
-            body { margin: 0; }
-            #receipt { box-shadow: none !important; }
-            .print\\:hidden { display: none !important; }
-            .print\\:shadow-none { box-shadow: none !important; }
-          }
-        `}</style>
+        <p className="text-sm font-semibold mt-2">{new Date().toLocaleString()}</p>
       </div>
-    );
-  }
+
+      {/* Staff & Customer Info */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="bg-blue-50 p-3 rounded-lg border-2 border-blue-200">
+          <h3 className="font-black text-blue-800 mb-2 text-sm">CASHIER DETAILS</h3>
+          <p className="text-xs font-bold">Name: {cashierInfo.name}</p>
+          <p className="text-xs font-bold">ID: {cashierInfo.id}</p>
+        </div>
+        <div className="bg-green-50 p-3 rounded-lg border-2 border-green-200">
+          <h3 className="font-black text-green-800 mb-2 text-sm">CUSTOMER INFO</h3>
+          <p className="text-xs font-bold">Name: {customerInfo.name}</p>
+          <p className="text-xs font-bold">Phone: {customerInfo.phone}</p>
+        </div>
+      </div>
+
+      {/* Order Details */}
+      <div className="bg-orange-50 p-3 rounded-lg border-2 border-orange-200 mb-6">
+        <div className="grid grid-cols-2 gap-2 text-xs font-bold">
+          <p>Type: <span className="text-orange-800">{orderType.toUpperCase()}</span></p>
+          <p>Payment: <span className="text-orange-800">{paymentMethod === 'cash' ? 'CASH' : paymentMethod === 'credit' ? 'CREDIT CARD' : 'ONLINE PAYMENT'}</span></p>
+          {orderType === 'delivery' && customerInfo.address && (
+            <p className="col-span-2">Address: <span className="text-orange-800">{customerInfo.address}</span></p>
+          )}
+          {customerInfo.instructions && (
+            <p className="col-span-2">Instructions: <span className="text-orange-800">{customerInfo.instructions}</span></p>
+          )}
+        </div>
+      </div>
+
+      {/* Order Items */}
+      <div className="border-4 border-double border-black p-4 mb-6">
+        <h3 className="font-black text-lg mb-4 text-center bg-black text-white py-2 -mx-4 -mt-4 mb-4">ORDER ITEMS</h3>
+        {cart.map((item, index) => (
+          <div key={index} className="mb-4 pb-3 border-b-2 border-dashed border-gray-400 last:border-b-0">
+            <div className="flex justify-between items-start mb-2">
+              <div className="flex-1">
+                <p className="font-black text-base">{item.name}</p>
+
+                {item.withSeasoning && (
+                  <span className="bg-green-500 text-white px-2 py-1 text-xs font-bold rounded">
+                    WITH SEASONING
+                  </span>
+                )}
+
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="bg-blue-500 text-white px-2 py-1 text-xs font-bold rounded">QTY: {item.quantity}</span>
+                  <span className="text-sm font-bold">× PKR {item.finalPrice}</span>
+                </div>
+
+                {/* ✅ Sauces */}
+                {item.sauces && item.sauces.length > 0 && (
+                  <div className="mt-1 text-xs text-blue-700">
+                    Sauces: {item.sauces.join(", ")}
+                  </div>
+                )}
+
+                {/* ✅ Add-ons */}
+                {item.addons && item.addons.length > 0 && (
+                  <div className="mt-1 text-xs text-green-700">
+                    Add-ons: {item.addons.join(", ")}
+                  </div>
+                )}
+
+                {/* Remarks */}
+                {item.remarks && (
+                  <div className="mt-2 bg-yellow-100 p-2 rounded border border-yellow-400">
+                    <p className="text-xs font-bold text-yellow-800">REMARKS: {item.remarks}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="text-right ml-2">
+                <p className="font-black text-lg">PKR {item.finalPrice * item.quantity}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Totals */}
+      <div className="bg-gray-100 p-4 rounded-lg border-4 border-double border-gray-800 mb-6">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center text-base font-bold">
+            <span>SUBTOTAL:</span>
+            <span>PKR {cart.reduce((total, item) => total + (item.finalPrice * item.quantity), 0)}</span>
+          </div>
+          {deliveryCharges > 0 && (
+            <div className="flex justify-between items-center text-base font-bold text-blue-600">
+              <span>DELIVERY CHARGES:</span>
+              <span>PKR {deliveryCharges}</span>
+            </div>
+          )}
+          <div className="border-t-4 border-double border-black pt-2 mt-3">
+            <div className="flex justify-between items-center">
+              <span className="text-2xl font-black">GRAND TOTAL:</span>
+              <span className="text-2xl font-black bg-black text-white px-4 py-2 rounded">PKR {getTotalPrice()}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="text-center border-4 border-double border-black p-4 mb-6">
+        <p className="font-black text-lg mb-2">THANK YOU FOR YOUR ORDER!</p>
+        <p className="font-bold text-base text-orange-600">Estimated Time: 15-20 minutes</p>
+        <p className="text-xs font-bold mt-2 text-gray-600">Order saved to system database</p>
+      </div>
+
+      <div className="flex gap-2 print:hidden">
+        <button
+          onClick={printOrder}
+          className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold"
+        >
+          🖨️ PRINT
+        </button>
+        <button
+          onClick={downloadReceiptAsImage}
+          className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold"
+        >
+          💾 DOWNLOAD
+        </button>
+        <button
+          onClick={startNewOrder}
+          className="flex-1 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-bold"
+        >
+          ➕ NEW ORDER
+        </button>
+      </div>
+
+      <style jsx>{`
+        @media print {
+          body { margin: 0; }
+          #receipt { box-shadow: none !important; }
+          .print\\:hidden { display: none !important; }
+          .print\\:shadow-none { box-shadow: none !important; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 
   // Order Confirmation Step
   if (currentStep === 'confirm') {
