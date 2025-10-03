@@ -1011,140 +1011,155 @@ function App() {
     );
   }
 
-  // Main Menu Step
-  return (
-    <div className="max-w-7xl mx-auto p-4 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">JOHNNY & JUGNU</h1>
-            <p className="text-gray-600">Cashier: {cashierInfo.name} | Customer: {customerInfo.name}</p>
-          </div>
-          <div className="relative">
-            <button
-              onClick={() => cart.length > 0 && setCurrentStep('confirm')}
-              disabled={cart.length === 0}
-              className="flex items-center gap-3 bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 disabled:bg-gray-300 transition-colors"
-            >
-              <ShoppingCart size={24} />
-              <div className="text-left">
-                <div className="font-semibold">PKR {getTotalPrice()}</div>
-                <div className="text-sm">{getTotalItems()} items</div>
+// Main Menu Step
+  if (currentStep === 'menu') {
+    return (
+      <>
+        <CustomizationModal />
+        <div className="max-w-7xl mx-auto p-4 bg-gray-50 min-h-screen">
+          {/* Header */}
+          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-4xl font-bold text-gray-800 mb-2">JOHNNY & JUGNU</h1>
+                <p className="text-gray-600">Cashier: {cashierInfo.name} | Customer: {customerInfo.name}</p>
               </div>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid lg:grid-cols-4 gap-4 sm:gap-6">
-        {/* Categories Sidebar */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-lg p-3 sm:p-4 sticky top-4">
-            <h3 className="font-bold text-base sm:text-lg mb-3 sm:mb-4">Categories</h3>
-            <div className="space-y-1 sm:space-y-2">
-              {categories.map(category => (
+              <div className="relative">
                 <button
-                  key={category.id}
-                  onClick={() => setActiveCategory(category.id)}
-                  className={`w-full text-left p-2 sm:p-3 rounded-lg transition-colors flex items-center gap-2 sm:gap-3 ${
-                    activeCategory === category.id
-                      ? 'bg-orange-500 text-white'
-                      : 'hover:bg-gray-100'
-                  }`}
+                  onClick={() => cart.length > 0 && setCurrentStep('confirm')}
+                  disabled={cart.length === 0}
+                  className="flex items-center gap-3 bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 disabled:bg-gray-300 transition-colors"
                 >
-                  <span className="text-lg sm:text-xl">{category.icon}</span>
-                  <span className="font-medium text-sm sm:text-base">{category.name}</span>
+                  <ShoppingCart size={24} />
+                  <div className="text-left">
+                    <div className="font-semibold">PKR {getTotalPrice()}</div>
+                    <div className="text-sm">{getTotalItems()} items</div>
+                  </div>
                 </button>
-              ))}
-            </div>
-            
-            <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t">
-              <button
-                onClick={() => setCurrentStep('customer')}
-                className="w-full text-left p-2 sm:p-3 rounded-lg bg-blue-50 hover:bg-blue-100 flex items-center gap-2 sm:gap-3"
-              >
-                <User size={18} />
-                <span className="font-medium text-sm sm:text-base">Edit Customer Info</span>
-              </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Menu Items */}
-        <div className="lg:col-span-3">
-          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 capitalize">
-              {categories.find(c => c.id === activeCategory)?.name}
-            </h2>
-            <div className="grid grid-cols-1 gap-3 sm:gap-4">
-              {menuData[activeCategory]?.map(item => (
-                <MenuItemCard key={item.id} item={item} />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Cart Sidebar */}
-      {cart.length > 0 && (
-        <div className="fixed right-2 sm:right-4 top-4 w-72 sm:w-80 bg-white rounded-lg shadow-2xl p-3 sm:p-4 z-50">
-          <div className="max-h-80 overflow-y-auto">
-            <h3 className="font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2 sticky top-0 bg-white pb-2">
-              <ShoppingCart size={18} />
-              Current Order
-            </h3>
-            <div className="space-y-2 sm:space-y-3 mb-3 sm:mb-4">
-              {cart.map(item => (
-                <div key={item.cartId} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-xs sm:text-sm truncate">{item.name}</div>
-                    {item.withSeasoning && (
-                      <div className="text-xs text-green-600">With Seasoning</div>
-                    )}
-                    <div className="text-xs sm:text-sm font-semibold">PKR {item.finalPrice}</div>
-                  </div>
-                  <div className="flex items-center gap-1 sm:gap-2 ml-2">
+          <div className="grid lg:grid-cols-4 gap-4 sm:gap-6">
+            {/* Categories Sidebar */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow-lg p-3 sm:p-4 sticky top-4">
+                <h3 className="font-bold text-base sm:text-lg mb-3 sm:mb-4">Categories</h3>
+                <div className="space-y-1 sm:space-y-2">
+                  {categories.map(category => (
                     <button
-                      onClick={() => updateQuantity(item.cartId, item.quantity - 1)}
-                      className="w-5 h-5 sm:w-6 sm:h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                      key={category.id}
+                      onClick={() => setActiveCategory(category.id)}
+                      className={`w-full text-left p-2 sm:p-3 rounded-lg transition-colors flex items-center gap-2 sm:gap-3 ${
+                        activeCategory === category.id
+                          ? 'bg-orange-500 text-white'
+                          : 'hover:bg-gray-100'
+                      }`}
                     >
-                      <Minus size={10} />
+                      <span className="text-lg sm:text-xl">{category.icon}</span>
+                      <span className="font-medium text-sm sm:text-base">{category.name}</span>
                     </button>
-                    <span className="w-6 sm:w-8 text-center text-xs sm:text-sm">{item.quantity}</span>
-                    <button
-                      onClick={() => updateQuantity(item.cartId, item.quantity + 1)}
-                      className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600"
-                    >
-                      <Plus size={10} />
-                    </button>
-                    <button
-                      onClick={() => removeFromCart(item.cartId)}
-                      className="ml-1 text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
+                  ))}
                 </div>
-              ))}
+                
+                <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t">
+                  <button
+                    onClick={() => setCurrentStep('customer')}
+                    className="w-full text-left p-2 sm:p-3 rounded-lg bg-blue-50 hover:bg-blue-100 flex items-center gap-2 sm:gap-3"
+                  >
+                    <User size={18} />
+                    <span className="font-medium text-sm sm:text-base">Edit Customer Info</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Menu Items */}
+            <div className="lg:col-span-3">
+              <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 capitalize">
+                  {categories.find(c => c.id === activeCategory)?.name}
+                </h2>
+                <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                  {menuData[activeCategory]?.map(item => (
+                    <MenuItemCard key={item.id} item={item} />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-          <div className="border-t pt-3 bg-white">
-            <div className="flex justify-between font-bold text-base sm:text-lg mb-3">
-              <span>Total:</span>
-              <span>PKR {getTotalPrice()}</span>
+
+          {/* Cart Sidebar */}
+          {cart.length > 0 && (
+            <div className="fixed right-2 sm:right-4 top-4 w-72 sm:w-80 bg-white rounded-lg shadow-2xl p-3 sm:p-4 z-40 max-h-[90vh] overflow-y-auto">
+              <h3 className="font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2 sticky top-0 bg-white pb-2">
+                <ShoppingCart size={18} />
+                Current Order
+              </h3>
+              <div className="space-y-2 sm:space-y-3 mb-3 sm:mb-4">
+                {cart.map(item => (
+                  <div key={item.cartId} className="bg-gray-50 p-2 rounded border">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-xs sm:text-sm truncate">{item.name}</div>
+                        {item.sauces && item.sauces.length > 0 && (
+                          <div className="text-xs text-blue-600 mt-1">
+                            Sauces: {item.sauces.map(s => s.name).join(', ')}
+                          </div>
+                        )}
+                        {item.addons && item.addons.length > 0 && (
+                          <div className="text-xs text-green-600 mt-1">
+                            Add-ons: {item.addons.map(a => a.name).join(', ')}
+                          </div>
+                        )}
+                        {item.withSeasoning && (
+                          <div className="text-xs text-green-600 mt-1">With Seasoning</div>
+                        )}
+                        <div className="text-xs sm:text-sm font-semibold mt-1">PKR {item.finalPrice}</div>
+                      </div>
+                      <div className="flex items-center gap-1 ml-2">
+                        <button
+                          onClick={() => updateQuantity(item.cartId, item.quantity - 1)}
+                          className="w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                        >
+                          <Minus size={10} />
+                        </button>
+                        <span className="w-6 text-center text-xs">{item.quantity}</span>
+                        <button
+                          onClick={() => updateQuantity(item.cartId, item.quantity + 1)}
+                          className="w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600"
+                        >
+                          <Plus size={10} />
+                        </button>
+                        <button
+                          onClick={() => removeFromCart(item.cartId)}
+                          className="ml-1 text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t pt-3 bg-white sticky bottom-0">
+                <div className="flex justify-between font-bold text-base mb-3">
+                  <span>Total:</span>
+                  <span>PKR {getTotalPrice()}</span>
+                </div>
+                <button
+                  onClick={() => setCurrentStep('confirm')}
+                  className="w-full bg-orange-500 text-white py-2 text-sm rounded-lg hover:bg-orange-600 transition-colors"
+                >
+                  Review Order
+                </button>
+              </div>
             </div>
-            <button
-              onClick={() => setCurrentStep('confirm')}
-              className="w-full bg-orange-500 text-white py-2 text-sm sm:text-base rounded-lg hover:bg-orange-600 transition-colors"
-            >
-              Review Order
-            </button>
-          </div>
+          )}
         </div>
-      )}
-    </div>
-  );
-}
+      </>
+    );
+  }
+
 
 export default App;
