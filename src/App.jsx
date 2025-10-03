@@ -324,27 +324,82 @@ function App() {
   };
 
 
-  const downloadReceiptAsImage = async () => {
-  try {
-    const receiptElement = document.getElementById("receipt"); // your receipt wrapper
-    if (!receiptElement) {
-      alert("Receipt not found");
-      return;
-    }
+const downloadPlainReceipt = async (orderNumber, cart, totals) => {
+  // Create a plain container
+  const plainDiv = document.createElement("div");
+  plainDiv.style.padding = "20px";
+  plainDiv.style.fontFamily = "monospace";
+  plainDiv.innerHTML = `
+    <h2>Johnny & Jugnu</h2>
+    <p>Order #JJ${orderNumber}</p>
+    <p>Date: ${new Date().toLocaleString()}</p>
+    <hr/>
+    ${cart
+      .map(
+        (item) =>
+          `${item.name} x${item.quantity} - PKR ${
+            item.finalPrice * item.quantity
+          } ${item.remarks ? "(Remarks: " + item.remarks + ")" : ""}`
+      )
+      .join("<br/>")}
+    <hr/>
+    <p><strong>Grand Total: PKR ${totals}</strong></p>
+  `;
 
-    const canvas = await html2canvas(receiptElement, {
-      scale: 2,  // higher resolution
-      useCORS: true
-    });
+  document.body.appendChild(plainDiv);
 
-    const link = document.createElement("a");
-    link.download = `JJ_Order_${orderNumber}_${new Date().toISOString().slice(0, 10)}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-  } catch (error) {
-    console.error("Error capturing receipt:", error);
-    alert("Failed to download receipt. Try printing instead.");
-  }
+  // Capture with html2canvas
+  const canvas = await html2canvas(plainDiv, { backgroundColor: "#fff" });
+  const dataUrl = canvas.toDataURL("image/png");
+
+  // Trigger download
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = `JJ_Order_${orderNumber}_${new Date()
+    .toISOString()
+    .slice(0, 10)}.png`;
+  a.click();
+
+  // Cleanup
+  document.body.removeChild(plainDiv);
+};const downloadPlainReceipt = async (orderNumber, cart, totals) => {
+  // Create a plain container
+  const plainDiv = document.createElement("div");
+  plainDiv.style.padding = "20px";
+  plainDiv.style.fontFamily = "monospace";
+  plainDiv.innerHTML = `
+    <h2>Johnny & Jugnu</h2>
+    <p>Order #JJ${orderNumber}</p>
+    <p>Date: ${new Date().toLocaleString()}</p>
+    <hr/>
+    ${cart
+      .map(
+        (item) =>
+          `${item.name} x${item.quantity} - PKR ${
+            item.finalPrice * item.quantity
+          } ${item.remarks ? "(Remarks: " + item.remarks + ")" : ""}`
+      )
+      .join("<br/>")}
+    <hr/>
+    <p><strong>Grand Total: PKR ${totals}</strong></p>
+  `;
+
+  document.body.appendChild(plainDiv);
+
+  // Capture with html2canvas
+  const canvas = await html2canvas(plainDiv, { backgroundColor: "#fff" });
+  const dataUrl = canvas.toDataURL("image/png");
+
+  // Trigger download
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = `JJ_Order_${orderNumber}_${new Date()
+    .toISOString()
+    .slice(0, 10)}.png`;
+  a.click();
+
+  // Cleanup
+  document.body.removeChild(plainDiv);
 };
 
   const startNewOrder = () => {
