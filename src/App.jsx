@@ -762,13 +762,13 @@ function App() {
 
                 {item.sauces && item.sauces.length > 0 && (
   <div className="mt-1 text-xs text-blue-700">
-    Sauces: {item.sauces.map(s => s.name).join(", ")}
+    Sauces: {item.sauces.map(s => typeof s === "string" ? s : s.name).join(", ")}
   </div>
 )}
 
 {item.addons && item.addons.length > 0 && (
   <div className="mt-1 text-xs text-green-700">
-    Add-ons: {item.addons.map(a => a.name).join(", ")}
+    Add-ons: {item.addons.map(a => typeof a === "string" ? a : a.name).join(", ")}
   </div>
 )}
 
