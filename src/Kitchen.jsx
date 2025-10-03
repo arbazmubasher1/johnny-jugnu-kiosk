@@ -220,7 +220,7 @@ function Kitchen() {
                   }`}
                 >
                   {order.status === "Pending" && "⏳ NEW ORDER"}
-                  {order.status === "Confirmed" && "👨‍🍳 PREPARING"}
+                  {order.status === "Confirmed" && "👨‍🍳 PUNCHING"}
                   {order.status === "Cancelled" && "❌ CANCELLED"}
                 </span>
               </div>
@@ -232,7 +232,7 @@ function Kitchen() {
                   disabled={order.status === "Confirmed"}
                   className="bg-green-500 hover:bg-green-600 text-white px-2 py-3 rounded-lg font-bold text-xs disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                 >
-                  ✅ START
+                  ✅ CONFIRM
                 </button>
                 <button
                   onClick={() => updateOrderStatus(order.id, "Completed")}
