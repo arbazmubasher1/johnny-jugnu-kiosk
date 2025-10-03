@@ -334,7 +334,8 @@ function App() {
 
     const canvas = await html2canvas(receiptElement, {
       scale: 2,  // higher resolution
-      useCORS: true
+      useCORS: true,
+      backgroundColor: null
     });
 
     const link = document.createElement("a");
@@ -706,7 +707,7 @@ function App() {
         <div className="text-center border-b-4 border-double border-black pb-4 mb-6">
           <h1 className="text-3xl font-black text-black mb-2">JOHNNY & JUGNU</h1>
           <p className="text-base font-bold text-gray-800">OFFICIAL RECEIPT</p>
-          <div className="bg-black text-white px-4 py-2 mt-3 inline-block rounded">
+          <div className="bg-white text-white px-4 py-2 mt-3 inline-block rounded">
             <p className="text-xl font-black">ORDER #JJ{orderNumber}</p>
           </div>
           <p className="text-sm font-semibold mt-2">{new Date().toLocaleString()}</p>
