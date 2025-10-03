@@ -903,3 +903,409 @@ function App() {
 }
 
 export default App;
+
+  // Receipt Step
+  if (currentStep === 'receipt') {
+    return (
+      <div className="max-w-md mx-auto p-4 bg-white min-h-screen print:shadow-none" id="receipt">
+        {/* Header */}
+        <div className="text-center border-b-4 border-double border-black pb-4 mb-6">
+          <h1 className="text-3xl font-black text-black mb-2">JOHNNY & JUGNU</h1>
+          <p className="text-base font-bold text-gray-800">OFFICIAL RECEIPT</p>
+          <div className="bg-black text-white px-4 py-2 mt-3 inline-block rounded">
+            <p className="text-xl font-black">ORDER #JJ{orderNumber}</p>
+          </div>
+          <p className="text-sm font-semibold mt-2">{new Date().toLocaleString()}</p>
+        </div>
+
+        {/* Staff & Customer Info */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-blue-50 p-3 rounded-lg border-2 border-blue-200">
+            <h3 className="font-black text-blue-800 mb-2 text-sm">CASHIER DETAILS</h3>
+            <p className="text-xs font-bold">Name: {cashierInfo.name}</p>
+            <p className="text-xs font-bold">ID: {cashierInfo.id}</p>
+          </div>
+          <div className="bg-green-50 p-3 rounded-lg border-2 border-green-200">
+            <h3 className="font-black text-green-800 mb-2 text-sm">CUSTOMER INFO</h3>
+            <p className="text-xs font-bold">Name: {customerInfo.name}</p>
+            <p className="text-xs font-bold">Phone: {customerInfo.phone}</p>
+          </div>
+        </div>
+
+        {/* Order Details */}
+        <div className="bg-orange-50 p-3 rounded-lg border-2 border-orange-200 mb-6">
+          <div className="grid grid-cols-2 gap-2 text-xs font-bold">
+            <p>Type: <span className="text-orange-800">{orderType.toUpperCase()}</span></p>
+            <p>Payment: <span className="text-orange-800">{paymentMethod === 'cash' ? 'CASH' : paymentMethod === 'credit' ? 'CREDIT CARD' : 'ONLINE PAYMENT'}</span></p>
+            {orderType === 'delivery' && customerInfo.address && (
+              <p className="col-span-2">Address: <span className="text-orange-800">{customerInfo.address}</span></p>
+            )}
+            {customerInfo.instructions && (
+              <p className="col-span-2">Instructions: <span className="text-orange-800">{customerInfo.instructions}</span></p>
+            )}
+          </div>
+        </div>
+
+        {/* Order Items */}
+        <div className="border-4 border-double border-black p-4 mb-6">
+          <h3 className="font-black text-lg mb-4 text-center bg-black text-white py-2 -mx-4 -mt-4 mb-4">ORDER ITEMS</h3>
+          {cart.map((item, index) => (
+            <div key={index} className="mb-4 pb-3 border-b-2 border-dashed border-gray-400 last:border-b-0">
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex-1">
+                  <p className="font-black text-base">{item.name}</p>
+                  {item.withSeasoning && <span className="bg-green-500 text-white px-2 py-1 text-xs font-bold rounded">WITH SEASONING</span>}
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="bg-blue-500 text-white px-2 py-1 text-xs font-bold rounded">QTY: {item.quantity}</span>
+                    <span className="text-sm font-bold">× PKR {item.finalPrice}</span>
+                  </div>
+                  {item.remarks && (
+                    <div className="mt-2 bg-yellow-100 p-2 rounded border border-yellow-400">
+                      <p className="text-xs font-bold text-yellow-800">REMARKS: {item.remarks}</p>
+                    </div>
+                  )}
+                </div>
+                <div className="text-right ml-2">
+                  <p className="font-black text-lg">PKR {item.finalPrice * item.quantity}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Totals */}
+        <div className="bg-gray-100 p-4 rounded-lg border-4 border-double border-gray-800 mb-6">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-base font-bold">
+              <span>SUBTOTAL:</span>
+              <span>PKR {cart.reduce((total, item) => total + (item.finalPrice * item.quantity), 0)}</span>
+            </div>
+            {deliveryCharges > 0 && (
+              <div className="flex justify-between items-center text-base font-bold text-blue-600">
+                <span>DELIVERY CHARGES:</span>
+                <span>PKR {deliveryCharges}</span>
+              </div>
+            )}
+            <div className="border-t-4 border-double border-black pt-2 mt-3">
+              <div className="flex justify-between items-center">
+                <span className="text-2xl font-black">GRAND TOTAL:</span>
+                <span className="text-2xl font-black bg-black text-white px-4 py-2 rounded">PKR {getTotalPrice()}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center border-4 border-double border-black p-4 mb-6">
+          <p className="font-black text-lg mb-2">THANK YOU FOR YOUR ORDER!</p>
+          <p className="font-bold text-base text-orange-600">Estimated Time: 15-20 minutes</p>
+          <p className="text-xs font-bold mt-2 text-gray-600">Order saved to system database</p>
+        </div>
+
+        <div className="flex gap-2 print:hidden">
+          <button
+            onClick={printOrder}
+            className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold"
+          >
+            🖨️ PRINT
+          </button>
+          <button
+            onClick={downloadReceiptAsImage}
+            className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold"
+          >
+            💾 DOWNLOAD
+          </button>
+          <button
+            onClick={startNewOrder}
+            className="flex-1 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-bold"
+          >
+            ➕ NEW ORDER
+          </button>
+        </div>
+
+        <style jsx>{`
+          @media print {
+            body { margin: 0; }
+            #receipt { box-shadow: none !important; }
+            .print\\:hidden { display: none !important; }
+            .print\\:shadow-none { box-shadow: none !important; }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Order Confirmation Step
+  if (currentStep === 'confirm') {
+    return (
+      <div className="max-w-4xl mx-auto p-4 bg-gray-50 min-h-screen">
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h2 className="text-2xl font-bold mb-6 text-center">Order Confirmation</h2>
+          
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Cashier Details</h3>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p><strong>Cashier:</strong> {cashierInfo.name}</p>
+                <p><strong>ID:</strong> {cashierInfo.id}</p>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Customer Details</h3>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p><strong>Name:</strong> {customerInfo.name}</p>
+                <p><strong>Phone:</strong> {customerInfo.phone}</p>
+                <p><strong>Order Type:</strong> {orderType}</p>
+                <p><strong>Payment Method:</strong> {paymentMethod === 'cash' ? 'Cash' : paymentMethod === 'credit' ? 'Credit Card' : 'Online Payment'}</p>
+                {orderType === 'delivery' && <p><strong>Address:</strong> {customerInfo.address}</p>}
+                {customerInfo.instructions && <p><strong>Instructions:</strong> {customerInfo.instructions}</p>}
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold mb-4">Order Items & Remarks</h3>
+            <div className="space-y-4">
+              {cart.map(item => (
+                <div key={item.cartId} className="bg-gray-50 p-4 rounded-lg border">
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="flex-1">
+                      <span className="font-medium text-base">{item.name}</span>
+                      {item.withSeasoning && <span className="text-sm text-green-600 ml-2 bg-green-100 px-2 py-1 rounded">(With Seasoning)</span>}
+                      <span className="text-sm text-gray-600 ml-2 bg-blue-100 px-2 py-1 rounded">x{item.quantity}</span>
+                    </div>
+                    <span className="font-semibold text-lg">PKR {item.finalPrice * item.quantity}</span>
+                  </div>
+                  <div className="mt-3">
+                    <label className="block text-sm font-medium mb-2">Remarks (Optional - e.g., No lettuce, Extra sauce, etc.):</label>
+                    <input
+                      type="text"
+                      value={item.remarks}
+                      onChange={(e) => updateRemarks(item.cartId, e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                      placeholder="Enter special instructions for this item..."
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Delivery Charges */}
+          <div className="mb-6 bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+            <h3 className="text-lg font-semibold mb-4">Delivery Charges</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setDeliveryCharges(0)}
+                  className={`px-4 py-2 rounded-lg border-2 font-semibold ${
+                    deliveryCharges === 0 ? 'border-green-500 bg-green-100 text-green-800' : 'border-gray-300'
+                  }`}
+                >
+                  No Delivery Charges (PKR 0)
+                </button>
+                <button
+                  onClick={() => setDeliveryCharges(100)}
+                  className={`px-4 py-2 rounded-lg border-2 font-semibold ${
+                    deliveryCharges === 100 ? 'border-orange-500 bg-orange-100 text-orange-800' : 'border-gray-300'
+                  }`}
+                >
+                  Standard Delivery (PKR 100)
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Custom Amount:</label>
+                <input
+                  type="number"
+                  value={deliveryCharges}
+                  onChange={(e) => setDeliveryCharges(parseInt(e.target.value) || 0)}
+                  className="w-24 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  min="0"
+                />
+                <span className="text-sm text-gray-600">PKR</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t pt-4 mb-6">
+            <div className="space-y-3 mb-4 bg-gray-100 p-4 rounded-lg">
+              <div className="flex justify-between items-center text-lg font-semibold">
+                <span>Subtotal:</span>
+                <span>PKR {cart.reduce((total, item) => total + (item.finalPrice * item.quantity), 0)}</span>
+              </div>
+              {deliveryCharges > 0 && (
+                <div className="flex justify-between items-center text-lg font-semibold text-blue-600">
+                  <span>Delivery Charges:</span>
+                  <span>PKR {deliveryCharges}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-between items-center text-2xl font-black bg-black text-white p-4 rounded-lg">
+              <span>GRAND TOTAL:</span>
+              <span>PKR {getTotalPrice()}</span>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 p-4 rounded-lg mb-6">
+            <p className="text-sm text-blue-800 font-medium">
+              📊 This order will be automatically saved to Supabase database (FREE cloud storage) for record keeping and kitchen management.
+            </p>
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              onClick={() => setCurrentStep('menu')}
+              className="flex-1 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+            >
+              Back to Menu
+            </button>
+            <button
+              onClick={submitOrder}
+              className="flex-1 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600"
+            >
+              Confirm Order & Save to System
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Main Menu Step
+  return (
+    <div className="max-w-7xl mx-auto p-4 bg-gray-50 min-h-screen">
+      {/* Header */}
+      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">JOHNNY & JUGNU</h1>
+            <p className="text-gray-600">Cashier: {cashierInfo.name} | Customer: {customerInfo.name}</p>
+          </div>
+          <div className="relative">
+            <button
+              onClick={() => cart.length > 0 && setCurrentStep('confirm')}
+              disabled={cart.length === 0}
+              className="flex items-center gap-3 bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 disabled:bg-gray-300 transition-colors"
+            >
+              <ShoppingCart size={24} />
+              <div className="text-left">
+                <div className="font-semibold">PKR {getTotalPrice()}</div>
+                <div className="text-sm">{getTotalItems()} items</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-4 gap-4 sm:gap-6">
+        {/* Categories Sidebar */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg shadow-lg p-3 sm:p-4 sticky top-4">
+            <h3 className="font-bold text-base sm:text-lg mb-3 sm:mb-4">Categories</h3>
+            <div className="space-y-1 sm:space-y-2">
+              {categories.map(category => (
+                <button
+                  key={category.id}
+                  onClick={() => setActiveCategory(category.id)}
+                  className={`w-full text-left p-2 sm:p-3 rounded-lg transition-colors flex items-center gap-2 sm:gap-3 ${
+                    activeCategory === category.id
+                      ? 'bg-orange-500 text-white'
+                      : 'hover:bg-gray-100'
+                  }`}
+                >
+                  <span className="text-lg sm:text-xl">{category.icon}</span>
+                  <span className="font-medium text-sm sm:text-base">{category.name}</span>
+                </button>
+              ))}
+            </div>
+            
+            <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t">
+              <button
+                onClick={() => setCurrentStep('customer')}
+                className="w-full text-left p-2 sm:p-3 rounded-lg bg-blue-50 hover:bg-blue-100 flex items-center gap-2 sm:gap-3"
+              >
+                <User size={18} />
+                <span className="font-medium text-sm sm:text-base">Edit Customer Info</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Menu Items */}
+        <div className="lg:col-span-3">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 capitalize">
+              {categories.find(c => c.id === activeCategory)?.name}
+            </h2>
+            <div className="grid grid-cols-1 gap-3 sm:gap-4">
+              {menuData[activeCategory]?.map(item => (
+                <MenuItemCard key={item.id} item={item} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Cart Sidebar */}
+      {cart.length > 0 && (
+        <div className="fixed right-2 sm:right-4 top-4 w-72 sm:w-80 bg-white rounded-lg shadow-2xl p-3 sm:p-4 z-50">
+          <div className="max-h-80 overflow-y-auto">
+            <h3 className="font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2 sticky top-0 bg-white pb-2">
+              <ShoppingCart size={18} />
+              Current Order
+            </h3>
+            <div className="space-y-2 sm:space-y-3 mb-3 sm:mb-4">
+              {cart.map(item => (
+                <div key={item.cartId} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-xs sm:text-sm truncate">{item.name}</div>
+                    {item.withSeasoning && (
+                      <div className="text-xs text-green-600">With Seasoning</div>
+                    )}
+                    <div className="text-xs sm:text-sm font-semibold">PKR {item.finalPrice}</div>
+                  </div>
+                  <div className="flex items-center gap-1 sm:gap-2 ml-2">
+                    <button
+                      onClick={() => updateQuantity(item.cartId, item.quantity - 1)}
+                      className="w-5 h-5 sm:w-6 sm:h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                    >
+                      <Minus size={10} />
+                    </button>
+                    <span className="w-6 sm:w-8 text-center text-xs sm:text-sm">{item.quantity}</span>
+                    <button
+                      onClick={() => updateQuantity(item.cartId, item.quantity + 1)}
+                      className="w-5 h-5 sm:w-6 sm:h-6 bg-green-500 text-white rounded-full flex items-center justify-center hover:bg-green-600"
+                    >
+                      <Plus size={10} />
+                    </button>
+                    <button
+                      onClick={() => removeFromCart(item.cartId)}
+                      className="ml-1 text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="border-t pt-3 bg-white">
+            <div className="flex justify-between font-bold text-base sm:text-lg mb-3">
+              <span>Total:</span>
+              <span>PKR {getTotalPrice()}</span>
+            </div>
+            <button
+              onClick={() => setCurrentStep('confirm')}
+              className="w-full bg-orange-500 text-white py-2 text-sm sm:text-base rounded-lg hover:bg-orange-600 transition-colors"
+            >
+              Review Order
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App;
