@@ -1011,7 +1011,7 @@ function App() {
     );
   }
 
-// Main Menu Step
+  // Main Menu Step
   if (currentStep === 'menu') {
     return (
       <>
@@ -1160,6 +1160,5 @@ function App() {
       </>
     );
   }
-
 
 export default App;
