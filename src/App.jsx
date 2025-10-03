@@ -760,19 +760,18 @@ function App() {
                   <span className="text-sm font-bold">× PKR {item.finalPrice}</span>
                 </div>
 
-                {/* ✅ Sauces */}
-                {item.sauces && item.sauces.length > 0 && (
-                  <div className="mt-1 text-xs text-blue-700">
-                    Sauces: {item.sauces.join(", ")}
-                  </div>
-                )}
+            {item.sauces && item.sauces.length > 0 && (
+  <div className="mt-1 text-xs text-blue-700">
+    Sauces: {item.sauces.map(s => (s.name ? s.name : s)).join(", ")}
+  </div>
+)}
 
-                {/* ✅ Add-ons */}
-                {item.addons && item.addons.length > 0 && (
-                  <div className="mt-1 text-xs text-green-700">
-                    Add-ons: {item.addons.join(", ")}
-                  </div>
-                )}
+{item.addons && item.addons.length > 0 && (
+  <div className="mt-1 text-xs text-green-700">
+    Add-ons: {item.addons.map(a => (a.name ? a.name : a)).join(", ")}
+  </div>
+)}
+
 
                 {/* Remarks */}
                 {item.remarks && (
