@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { ShoppingCart, Plus, Minus, Trash2, Clock, MapPin, User, X } from 'lucide-react';
-import './App.css';
 import html2canvas from "html2canvas";
+import './App.css';
+
 
 
 function App() {
