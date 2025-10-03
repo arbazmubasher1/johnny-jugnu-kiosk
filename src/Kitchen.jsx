@@ -46,7 +46,6 @@ function Kitchen() {
       console.error("Error updating order:", error);
       alert("Failed to update order status");
     } else {
-      // Show success feedback
       console.log(`✅ Order ${orderId} status updated to ${status}`);
       fetchOrders(); // refresh after update
     }
@@ -64,7 +63,7 @@ function Kitchen() {
         { event: "*", schema: "public", table: "orders" },
         (payload) => {
           console.log("🔔 Realtime event received:", payload);
-          fetchOrders(); // refresh whenever an order is added/updated
+          fetchOrders();
         }
       )
       .subscribe((status) => {
@@ -82,8 +81,7 @@ function Kitchen() {
     const interval = setInterval(() => {
       console.log("🔄 Auto-refresh backup triggered");
       fetchOrders();
-    }, 30000); // 30 seconds
-
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -104,7 +102,7 @@ function Kitchen() {
         </div>
       </div>
 
-      {/* Manual Refresh Button */}
+      {/* Manual Refresh */}
       <div className="text-center mb-6">
         <button
           onClick={fetchOrders}
@@ -149,16 +147,18 @@ function Kitchen() {
                 <p className="text-gray-800 text-sm font-bold mb-1">
                   👤 {order.customer_name}
                 </p>
-                <p className="text-gray-700 text-xs">
-                  📱 {order.customer_phone}
-                </p>
+                <p className="text-gray-700 text-xs">📱 {order.customer_phone}</p>
                 <div className="flex gap-2 mt-2">
-                  <span className={`px-2 py-1 rounded text-xs font-bold ${
-                    order.order_type === 'delivery' 
-                      ? 'bg-purple-500 text-white' 
-                      : 'bg-green-500 text-white'
-                  }`}>
-                    {order.order_type === 'delivery' ? '🚗 DELIVERY' : '🏃 PICKUP'}
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-bold ${
+                      order.order_type === "delivery"
+                        ? "bg-purple-500 text-white"
+                        : "bg-green-500 text-white"
+                    }`}
+                  >
+                    {order.order_type === "delivery"
+                      ? "🚗 DELIVERY"
+                      : "🏃 PICKUP"}
                   </span>
                   <span className="px-2 py-1 rounded text-xs font-bold bg-gray-200 text-gray-800">
                     💳 {order.payment_method.toUpperCase()}
@@ -173,7 +173,10 @@ function Kitchen() {
                 </h3>
                 <ul className="space-y-2">
                   {order.items.map((item, i) => (
-                    <li key={i} className="border-b border-yellow-200 pb-2 last:border-b-0">
+                    <li
+                      key={i}
+                      className="border-b border-yellow-200 pb-2 last:border-b-0"
+                    >
                       <div className="flex justify-between items-start">
                         <span className="font-bold text-sm text-gray-800">
                           {item.name}
@@ -182,14 +185,43 @@ function Kitchen() {
                           x{item.quantity}
                         </span>
                       </div>
-                      
+
+                      {/* ✅ Sauces */}
+                      {item.sauces && item.sauces.length > 0 && (
+                        <div className="mt-1">
+                          <p className="text-xs font-bold text-gray-600">
+                            🥫 Sauces:
+                          </p>
+                          <ul className="ml-4 list-disc text-xs text-gray-700">
+                            {item.sauces.map((sauce, idx) => (
+                              <li key={idx}>{sauce}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* ✅ Add-ons */}
+                      {item.add_ons && item.add_ons.length > 0 && (
+                        <div className="mt-1">
+                          <p className="text-xs font-bold text-gray-600">
+                            ➕ Add-ons:
+                          </p>
+                          <ul className="ml-4 list-disc text-xs text-gray-700">
+                            {item.add_ons.map((addon, idx) => (
+                              <li key={idx}>{addon}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Seasoning */}
                       {item.withSeasoning && (
                         <div className="mt-1 bg-green-500 text-white text-xs px-2 py-1 rounded inline-block">
                           ✨ WITH SEASONING
                         </div>
                       )}
 
-                      {/* ✅ Show remarks prominently */}
+                      {/* Remarks */}
                       {item.remarks && item.remarks.trim() !== "" && (
                         <div className="mt-2 bg-red-100 border-2 border-red-400 text-red-900 text-xs rounded px-2 py-2 font-bold">
                           ⚠️ SPECIAL REQUEST: {item.remarks}
