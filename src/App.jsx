@@ -760,15 +760,21 @@ function App() {
                   <span className="text-sm font-bold">× PKR {item.finalPrice}</span>
                 </div>
 
-                {item.sauces && item.sauces.length > 0 && (
-  <div className="mt-1 text-xs text-blue-700">
-    Sauces: {item.sauces.map(s => typeof s === "string" ? s : s.name).join(", ")}
+                {/* Sauces */}
+{item.sauces && item.sauces.length > 0 && (
+  <div className="mt-2 bg-blue-100 p-2 rounded border border-blue-300">
+    <p className="text-xs font-bold text-blue-800">
+      SAUCES: {item.sauces.map(s => s.name).join(", ")}
+    </p>
   </div>
 )}
 
+{/* Add-ons */}
 {item.addons && item.addons.length > 0 && (
-  <div className="mt-1 text-xs text-green-700">
-    Add-ons: {item.addons.map(a => typeof a === "string" ? a : a.name).join(", ")}
+  <div className="mt-2 bg-green-100 p-2 rounded border border-green-300">
+    <p className="text-xs font-bold text-green-800">
+      ADD-ONS: {item.addons.map(a => a.name).join(", ")}
+    </p>
   </div>
 )}
 
