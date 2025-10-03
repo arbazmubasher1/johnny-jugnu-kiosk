@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ShoppingCart, Plus, Minus, Trash2, Clock, MapPin, User, X } from 'lucide-react';
 import './App.css';
+import html2canvas from "html2canvas";
 
 function App() {
   const [cart, setCart] = useState([]);
@@ -319,7 +320,7 @@ function App() {
   const printOrder = () => {
     window.print();
   };
-import html2canvas from "html2canvas";
+
 
   const downloadReceiptAsImage = async () => {
   try {
