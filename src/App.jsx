@@ -760,18 +760,33 @@ function App() {
                   <span className="text-sm font-bold">× PKR {item.finalPrice}</span>
                 </div>
 
-            {item.sauces && item.sauces.length > 0 && (
-  <div className="mt-1 text-xs text-blue-700">
-    Sauces: {item.sauces.map(s => (s.name ? s.name : s)).join(", ")}
-  </div>
-)}
+            {/* ✅ Sauces */}
+                      {item.sauces && item.sauces.length > 0 && (
+                        <div className="mt-1">
+                          <p className="text-xs font-bold text-gray-600">
+                            🥫 Sauces:
+                          </p>
+                          <ul className="ml-4 list-disc text-xs text-gray-700">
+                            {item.sauces.map((sauce, idx) => (
+                              <li key={idx}>{sauce}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
 
-{item.addons && item.addons.length > 0 && (
-  <div className="mt-1 text-xs text-green-700">
-    Add-ons: {item.addons.map(a => (a.name ? a.name : a)).join(", ")}
-  </div>
-)}
-
+                      {/* ✅ Add-ons */}
+                      {item.add_ons && item.add_ons.length > 0 && (
+                        <div className="mt-1">
+                          <p className="text-xs font-bold text-gray-600">
+                            ➕ Add-ons:
+                          </p>
+                          <ul className="ml-4 list-disc text-xs text-gray-700">
+                            {item.add_ons.map((addon, idx) => (
+                              <li key={idx}>{addon}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
 
                 {/* Remarks */}
                 {item.remarks && (
