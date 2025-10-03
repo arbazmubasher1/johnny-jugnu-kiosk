@@ -319,78 +319,30 @@ function App() {
   const printOrder = () => {
     window.print();
   };
+import html2canvas from "html2canvas";
 
   const downloadReceiptAsImage = async () => {
-    try {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      
-      canvas.width = 400;
-      canvas.height = 1200;
-      
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#000000';
-      ctx.textAlign = 'center';
-      
-      let y = 40;
-      const lineHeight = 25;
-      
-      ctx.font = 'bold 24px Arial';
-      ctx.fillText('JOHNNY & JUGNU', canvas.width / 2, y);
-      y += lineHeight * 2;
-      
-      ctx.font = 'bold 18px Arial';
-      ctx.fillText(`Order #JJ${orderNumber}`, canvas.width / 2, y);
-      y += lineHeight * 2;
-      
-      ctx.textAlign = 'left';
-      ctx.font = '12px Arial';
-      cart.forEach((item) => {
-        ctx.fillText(`${item.name} x${item.quantity}`, 20, y);
-        if (item.sauces && item.sauces.length > 0) {
-          y += lineHeight;
-          ctx.fillText(`  Sauces: ${item.sauces.map(s => s.name).join(', ')}`, 20, y);
-        }
-        if (item.addons && item.addons.length > 0) {
-          y += lineHeight;
-          ctx.fillText(`  Add-ons: ${item.addons.map(a => a.name).join(', ')}`, 20, y);
-        }
-        ctx.textAlign = 'right';
-        ctx.fillText(`PKR ${item.finalPrice * item.quantity}`, canvas.width - 20, y);
-        ctx.textAlign = 'left';
-        y += lineHeight * 1.5;
-      });
-      
-      y += 20;
-      ctx.textAlign = 'center';
-      ctx.font = 'bold 18px Arial';
-      ctx.fillText(`TOTAL: PKR ${getTotalPrice()}`, canvas.width / 2, y);
-      
-      const finalCanvas = document.createElement('canvas');
-      finalCanvas.width = canvas.width;
-      finalCanvas.height = y + 40;
-      const finalCtx = finalCanvas.getContext('2d');
-      finalCtx.fillStyle = '#ffffff';
-      finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-      finalCtx.drawImage(canvas, 0, 0);
-      
-      finalCanvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `JJ_Order_${orderNumber}_${new Date().toISOString().slice(0, 10)}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 'image/png');
-      
-    } catch (error) {
-      console.error('Error generating receipt image:', error);
-      alert('Error generating receipt image. Please try printing instead.');
+  try {
+    const receiptElement = document.getElementById("receipt"); // your receipt wrapper
+    if (!receiptElement) {
+      alert("Receipt not found");
+      return;
     }
-  };
+
+    const canvas = await html2canvas(receiptElement, {
+      scale: 2,  // higher resolution
+      useCORS: true
+    });
+
+    const link = document.createElement("a");
+    link.download = `JJ_Order_${orderNumber}_${new Date().toISOString().slice(0, 10)}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  } catch (error) {
+    console.error("Error capturing receipt:", error);
+    alert("Failed to download receipt. Try printing instead.");
+  }
+};
 
   const startNewOrder = () => {
     setCart([]);
