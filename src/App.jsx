@@ -3,6 +3,7 @@ import { ShoppingCart, Plus, Minus, Trash2, Clock, MapPin, User, X } from 'lucid
 import './App.css';
 import html2canvas from "html2canvas";
 
+
 function App() {
   const [cart, setCart] = useState([]);
   const [activeCategory, setActiveCategory] = useState('mains');
