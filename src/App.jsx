@@ -185,13 +185,14 @@ function App() {
   };
 
   // Toggle sauce selection (max 2)
-  const toggleSauce = (sauce) => {
-    if (selectedSauces.find(s => s.id === sauce.id)) {
-      setSelectedSauces(selectedSauces.filter(s => s.id !== sauce.id));
-    } else if (selectedSauces.length < 2) {
-      setSelectedSauces([...selectedSauces, sauce]);
-    }
-  };
+ const toggleSauce = (sauce) => {
+  if (selectedSauces.length < 2) {
+    setSelectedSauces([...selectedSauces, sauce]); // push duplicate
+  } else {
+    alert("You can only select 2 sauces total");
+  }
+};
+
 
   // Toggle addon selection
   const toggleAddon = (addon) => {
