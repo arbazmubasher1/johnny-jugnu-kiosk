@@ -334,8 +334,7 @@ function App() {
 
     const canvas = await html2canvas(receiptElement, {
       scale: 2,  // higher resolution
-      useCORS: true,
-      backgroundColor: null
+      useCORS: true
     });
 
     const link = document.createElement("a");
