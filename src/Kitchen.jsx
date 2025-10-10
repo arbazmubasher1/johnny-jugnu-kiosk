@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
+// ✅ Supabase connection (CRA style)
 const SUPABASE_URL =
   process.env.REACT_APP_SUPABASE_URL ||
   "https://lugtmmcpcgzyytkzqozn.supabase.co";
 const SUPABASE_ANON_KEY =
   process.env.REACT_APP_SUPABASE_ANON_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1Z3RtbWNwY2d6eXl0a3pxb3puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzODk0MDQsImV4cCI6MjA3NDk2NTQwNH0.uSEDsRNpH_QGwgGxrrxuYKCkuH3lszd8O9w7GN9INpE";
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 function Kitchen() {
@@ -17,9 +19,10 @@ function Kitchen() {
   const [loginInfo, setLoginInfo] = useState({ id: "", password: "" });
   const [loginError, setLoginError] = useState("");
 
-  // Hardcoded login credentials (for kiosk mode only)
+  // Hardcoded login credentials
   const HARD_CODED_USER = { id: "kitchen", password: "123" };
 
+  // ✅ Handle login
   const handleLogin = () => {
     if (
       loginInfo.id.trim().toLowerCase() === HARD_CODED_USER.id &&
@@ -32,18 +35,17 @@ function Kitchen() {
     }
   };
 
-  // Fetch latest active orders
+  // ✅ Fetch latest active orders
   async function fetchOrders() {
     setLoading(true);
     const { data, error } = await supabase
       .from("orders")
       .select("*")
       .not("status", "in", '("Completed","Cancelled")')
-      .order("created_at", { ascending: true })
-      .limit(10);
+      .order("created_at", { ascending: true });
 
     if (error) {
-      console.error("Error fetching orders:", error);
+      console.error("❌ Error fetching orders:", error);
     } else {
       setOrders(data || []);
       setLastUpdate(new Date());
@@ -51,7 +53,7 @@ function Kitchen() {
     setLoading(false);
   }
 
-  // Update order status
+  // ✅ Update order status
   async function updateOrderStatus(orderId, status) {
     const { error } = await supabase
       .from("orders")
@@ -67,27 +69,51 @@ function Kitchen() {
     }
   }
 
-  // Realtime listener
+  // ✅ Setup real-time subscription
   useEffect(() => {
     if (!loggedIn) return;
+
     console.log("🔌 Setting up Supabase Realtime connection...");
     fetchOrders();
 
     const channel = supabase
-      .channel("orders-changes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
-        console.log("🔔 Realtime update detected");
-        fetchOrders();
-      })
+      .channel("orders-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "orders" },
+        (payload) => {
+          console.log("🆕 New order received:", payload.new);
+          setOrders((prev) => [...prev, payload.new]);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders" },
+        (payload) => {
+          console.log("♻️ Order updated:", payload.new);
+          setOrders((prev) =>
+            prev.map((o) => (o.id === payload.new.id ? payload.new : o))
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "orders" },
+        (payload) => {
+          console.log("🗑 Order deleted:", payload.old);
+          setOrders((prev) => prev.filter((o) => o.id !== payload.old.id));
+        }
+      )
       .subscribe();
 
     return () => {
-      console.log("🔌 Cleaning up Realtime connection...");
+      console.log("🧹 Cleaning up Realtime connection...");
       supabase.removeChannel(channel);
+      supabase.removeAllChannels();
     };
   }, [loggedIn]);
 
-  // Backup auto-refresh
+  // ✅ Auto-refresh backup every 30s
   useEffect(() => {
     if (!loggedIn) return;
     const interval = setInterval(() => {
@@ -97,7 +123,9 @@ function Kitchen() {
     return () => clearInterval(interval);
   }, [loggedIn]);
 
-  // LOGIN SCREEN
+  // ==============================
+  // 🔒 LOGIN SCREEN
+  // ==============================
   if (!loggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 p-6">
@@ -119,7 +147,9 @@ function Kitchen() {
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold mb-2">Password</label>
+              <label className="block text-sm font-semibold mb-2">
+                Password
+              </label>
               <input
                 type="password"
                 value={loginInfo.password}
@@ -140,13 +170,17 @@ function Kitchen() {
               Log In
             </button>
           </div>
-          
+          <p className="text-xs text-gray-500 text-center mt-4">
+            Demo credentials: <strong>kitchen / 123</strong>
+          </p>
         </div>
       </div>
     );
   }
 
-  // DASHBOARD
+  // ==============================
+  // 🍔 KITCHEN DASHBOARD
+  // ==============================
   return (
     <div className="min-h-screen bg-gray-900 p-4 sm:p-6">
       {/* Header */}
@@ -164,7 +198,7 @@ function Kitchen() {
         </div>
       </div>
 
-      {/* Refresh */}
+      {/* Manual Refresh */}
       <div className="text-center mb-6">
         <button
           onClick={fetchOrders}
@@ -175,7 +209,7 @@ function Kitchen() {
         </button>
       </div>
 
-      {/* Orders Grid */}
+      {/* Orders */}
       {loading && orders.length === 0 ? (
         <div className="text-center text-white text-lg py-20">
           <div className="animate-spin text-6xl mb-4">⏳</div>
@@ -194,6 +228,7 @@ function Kitchen() {
               key={order.id}
               className="bg-white shadow-2xl rounded-lg p-4 border-4 border-orange-400 transform hover:scale-105 transition-transform"
             >
+              {/* Header */}
               <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg p-3 mb-3">
                 <h2 className="text-2xl font-black text-center">
                   #{order.order_number}
@@ -203,6 +238,7 @@ function Kitchen() {
                 </p>
               </div>
 
+              {/* Customer Info */}
               <div className="bg-blue-50 rounded-lg p-3 mb-3">
                 <p className="text-gray-800 text-sm font-bold mb-1">
                   👤 {order.customer_name}
@@ -228,6 +264,7 @@ function Kitchen() {
                 </div>
               </div>
 
+              {/* Items */}
               <div className="bg-yellow-50 rounded-lg p-3 mb-3 border-2 border-yellow-200">
                 <h3 className="font-black text-sm mb-2 text-gray-800">
                   📋 ORDER ITEMS:
@@ -253,8 +290,8 @@ function Kitchen() {
                             🥫 Sauces:
                           </p>
                           <ul className="ml-4 list-disc text-xs text-gray-700">
-                            {item.sauces.map((s, idx) => (
-                              <li key={idx}>{s}</li>
+                            {item.sauces.map((sauce, idx) => (
+                              <li key={idx}>{sauce}</li>
                             ))}
                           </ul>
                         </div>
@@ -266,8 +303,8 @@ function Kitchen() {
                             ➕ Add-ons:
                           </p>
                           <ul className="ml-4 list-disc text-xs text-gray-700">
-                            {item.add_ons.map((a, idx) => (
-                              <li key={idx}>{a}</li>
+                            {item.add_ons.map((addon, idx) => (
+                              <li key={idx}>{addon}</li>
                             ))}
                           </ul>
                         </div>
@@ -289,11 +326,13 @@ function Kitchen() {
                 </ul>
               </div>
 
+              {/* Total */}
               <div className="bg-gray-800 text-white rounded-lg p-3 mb-3 text-center">
                 <p className="text-xs font-semibold opacity-80">TOTAL</p>
                 <p className="text-2xl font-black">PKR {order.grand_total}</p>
               </div>
 
+              {/* Status Badge */}
               <div className="mb-3 text-center">
                 <span
                   className={`px-4 py-2 rounded-lg text-white text-sm font-black inline-block ${
@@ -312,23 +351,24 @@ function Kitchen() {
                 </span>
               </div>
 
+              {/* Action Buttons */}
               <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={() => updateOrderStatus(order.id, "Confirmed")}
                   disabled={order.status === "Confirmed"}
-                  className="bg-green-500 hover:bg-green-600 text-white px-2 py-3 rounded-lg font-bold text-xs disabled:bg-gray-300"
+                  className="bg-green-500 hover:bg-green-600 text-white px-2 py-3 rounded-lg font-bold text-xs disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                 >
                   ✅ CONFIRM
                 </button>
                 <button
                   onClick={() => updateOrderStatus(order.id, "Completed")}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-3 rounded-lg font-bold text-xs"
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-3 rounded-lg font-bold text-xs transition-colors"
                 >
                   🏁 COMPLETED
                 </button>
                 <button
                   onClick={() => updateOrderStatus(order.id, "Cancelled")}
-                  className="bg-red-500 hover:bg-red-600 text-white px-2 py-3 rounded-lg font-bold text-xs"
+                  className="bg-red-500 hover:bg-red-600 text-white px-2 py-3 rounded-lg font-bold text-xs transition-colors"
                 >
                   ❌ CANCEL
                 </button>
