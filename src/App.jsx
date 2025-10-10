@@ -617,9 +617,7 @@ function App() {
             Continue to Customer Details
           </button>
 
-          <div className="mt-3 text-xs text-gray-500">
-            <strong>Dev kiosk creds:</strong> spider/123 • lupin/123 • wehshi/123
-          </div>
+          
         </div>
       </div>
     );
