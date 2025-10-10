@@ -220,29 +220,27 @@ function App() {
     setShowCustomizationModal(true);
   };
 
-  // Toggle sauce selection (max 2)
- const toggleSauce = (sauce) => {
-  if (selectedSauces.find(s => s.id === sauce.id)) {
-    // deselect
-    setSelectedSauces(selectedSauces.filter(s => s.id !== sauce.id));
+// Toggle sauce selection (max 2, duplicates allowed)
+const toggleSauce = (sauce) => {
+  // If the user already has 2 sauces selected, stop further additions
+  if (selectedSauces.length >= 2) {
+    alert("You can only select 2 sauces total");
     return;
   }
 
-  if (selectedSauces.length < 2) {
-    setSelectedSauces([...selectedSauces, sauce]);
-  } else {
-    alert("You can only select 2 sauces total");
-  }
+  // Add another instance (even if it's the same sauce)
+  setSelectedSauces([...selectedSauces, sauce]);
 };
 
-  // Toggle addon selection
-  const toggleAddon = (addon) => {
-    if (selectedAddons.find(a => a.id === addon.id)) {
-      setSelectedAddons(selectedAddons.filter(a => a.id !== addon.id));
-    } else {
-      setSelectedAddons([...selectedAddons, addon]);
-    }
-  };
+// Toggle addon selection (duplicates allowed)
+const toggleAddon = (addon) => {
+  // Count how many times this addon already appears
+  const count = selectedAddons.filter(a => a.id === addon.id).length;
+
+
+  // Add another instance (even if it’s the same addon)
+  setSelectedAddons([...selectedAddons, addon]);
+};
 
   // Calculate total price with addons
   const getCustomizedPrice = () => {
