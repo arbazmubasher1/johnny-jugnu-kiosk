@@ -3,8 +3,6 @@ import { ShoppingCart, Plus, Minus, Trash2, Clock, MapPin, User, X } from 'lucid
 import html2canvas from "html2canvas";
 import './App.css';
 
-
-
 function App() {
   const [cart, setCart] = useState([]);
   const [activeCategory, setActiveCategory] = useState('mains');
@@ -16,32 +14,61 @@ function App() {
     instructions: ''
   });
   const [cashierInfo, setCashierInfo] = useState({
+    id: '',
     name: '',
-    id: ''
+    password: ''
   });
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [currentStep, setCurrentStep] = useState('cashier');
   const [deliveryCharges, setDeliveryCharges] = useState(0);
   const [orderNumber, setOrderNumber] = useState(null);
-  
+
   // Customization modal state
   const [showCustomizationModal, setShowCustomizationModal] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
   const [selectedSauces, setSelectedSauces] = useState([]);
   const [selectedAddons, setSelectedAddons] = useState([]);
 
+  // Supabase credentials
   const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://lugtmmcpcgzyytkzqozn.supabase.co';
   const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1Z3RtbWNwY2d6eXl0a3pxb3puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzODk0MDQsImV4cCI6MjA3NDk2NTQwNH0.uSEDsRNpH_QGwgGxrrxuYKCkuH3lszd8O9w7GN9INpE';
 
+  // --- LOGIN FUNCTIONALITY ---
+  const [loginError, setLoginError] = useState(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+const handleLogin = () => {
+  setLoginError(null);
+  setIsLoggingIn(true);
+
+  // Local hard-coded users
+  const validUsers = [
+    { id: 'spider', name: 'Spider', password: '123' },
+    { id: 'lupin', name: 'Lupin', password: '123' },
+    { id: 'wehshi', name: 'Wehshi', password: '123' },
+  ];
+
+  // Find match
+  const foundUser = validUsers.find(
+    (u) => u.id === cashierInfo.id && u.password === cashierInfo.password
+  );
+
+  if (foundUser) {
+    // Login success
+    setCashierInfo({ id: foundUser.id, name: foundUser.name });
+    setCurrentStep('customer');
+  } else {
+    // Invalid credentials
+    setLoginError('Invalid cashier ID or password');
+  }
+
+  setIsLoggingIn(false);
+};
+
+
+  // --- SUPABASE ORDER SUBMISSION ---
   const submitToSupabase = async (orderData) => {
     try {
-      console.log('Order data ready for Supabase:', orderData);
-      
-      if (SUPABASE_URL === 'YOUR_SUPABASE_PROJECT_URL' || SUPABASE_ANON_KEY === 'YOUR_SUPABASE_ANON_KEY') {
-        console.log('⚠️ Supabase credentials not configured yet. Order data logged above.');
-        return true;
-      }
-      
       const response = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
         method: 'POST',
         headers: {
@@ -50,31 +77,14 @@ function App() {
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
-        body: JSON.stringify({
-          order_number: orderData.orderNumber,
-          cashier_name: orderData.cashier.name,
-          cashier_id: orderData.cashier.id,
-          customer_name: orderData.customer.name,
-          customer_phone: orderData.customer.phone,
-          customer_address: orderData.customer.address,
-          customer_instructions: orderData.customer.instructions,
-          order_type: orderData.orderType,
-          payment_method: orderData.paymentMethod,
-          items: orderData.items,
-          items_total: orderData.itemsTotal,
-          delivery_charge: orderData.deliveryCharge,
-          grand_total: orderData.grandTotal,
-          status: orderData.status,
-          estimated_time: orderData.estimatedTime
-        })
+        body: JSON.stringify(orderData)
       });
-      
+
       if (response.ok || response.status === 201) {
         console.log('✅ Order successfully saved to Supabase database');
         return true;
       } else {
-        const errorText = await response.text();
-        console.error('❌ Failed to save to Supabase:', response.status, errorText);
+        console.error('❌ Failed to save order:', response.status);
         return false;
       }
     } catch (error) {
@@ -82,6 +92,7 @@ function App() {
       return false;
     }
   };
+
 
   // Available sauces for selection
   const availableSauces = [
