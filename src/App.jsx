@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Plus, Minus, Trash2, Clock, MapPin, User, X } from 'lucide-react';
 import html2canvas from "html2canvas";
 import './App.css';
@@ -38,6 +38,48 @@ function App() {
     wehshi: '123'
   };
   // ----------------------------------------------------
+
+  // ======== LOGIN PERSISTENCE (localStorage) =========
+  const SESSION_KEY = 'jj_kiosk_session';
+
+  const saveSession = (stepOverride = null) => {
+    const payload = {
+      cashier: { name: cashierInfo.name || '', id: cashierInfo.id || '' },
+      currentStep: stepOverride ?? currentStep,
+      ts: Date.now()
+    };
+    // never store password
+    localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+  };
+
+  const clearSession = () => {
+    localStorage.removeItem(SESSION_KEY);
+  };
+
+  // Hydrate session on first load/refresh
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return;
+      const sess = JSON.parse(raw);
+      if (sess?.cashier?.id) {
+        setCashierInfo(ci => ({ ...ci, name: sess.cashier.name || '', id: sess.cashier.id || '', password: '' }));
+        // default to 'customer' if step is missing or invalid
+        const step = ['cashier','customer','menu','confirm','receipt'].includes(sess.currentStep) ? sess.currentStep : 'customer';
+        setCurrentStep(step);
+      }
+    } catch (e) {
+      console.warn('Failed to parse saved session:', e);
+    }
+  }, []);
+
+  // Helper to set step + persist
+  const gotoStep = (step) => {
+    setCurrentStep(step);
+    // save immediately with the new step
+    setTimeout(() => saveSession(step), 0);
+  };
+  // ===================================================
 
   const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://lugtmmcpcgzyytkzqozn.supabase.co';
   const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1Z3RtbWNwY2d6eXl0a3pxb3puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzODk0MDQsImV4cCI6MjA3NDk2NTQwNH0.uSEDsRNpH_QGwgGxrrxuYKCkuH3lszd8O9w7GN9INpE';
@@ -205,7 +247,9 @@ function App() {
       }
       // clear password in state for safety
       setCashierInfo(ci => ({ ...ci, password: '' }));
-      setCurrentStep('customer');
+      // persist session immediately
+      setTimeout(() => saveSession('customer'), 0);
+      gotoStep('customer');
     } else {
       setLoginError('Invalid cashier ID or password.');
     }
@@ -220,27 +264,19 @@ function App() {
     setShowCustomizationModal(true);
   };
 
-// Toggle sauce selection (max 2, duplicates allowed)
-const toggleSauce = (sauce) => {
-  // If the user already has 2 sauces selected, stop further additions
-  if (selectedSauces.length >= 2) {
-    alert("You can only select 2 sauces total");
-    return;
-  }
+  // Toggle sauce selection (max 2, duplicates allowed)
+  const toggleSauce = (sauce) => {
+    if (selectedSauces.length >= 2) {
+      alert("You can only select 2 sauces total");
+      return;
+    }
+    setSelectedSauces([...selectedSauces, sauce]);
+  };
 
-  // Add another instance (even if it's the same sauce)
-  setSelectedSauces([...selectedSauces, sauce]);
-};
-
-// Toggle addon selection (duplicates allowed)
-const toggleAddon = (addon) => {
-  // Count how many times this addon already appears
-  const count = selectedAddons.filter(a => a.id === addon.id).length;
-
-
-  // Add another instance (even if it’s the same addon)
-  setSelectedAddons([...selectedAddons, addon]);
-};
+  // Toggle addon selection (duplicates allowed)
+  const toggleAddon = (addon) => {
+    setSelectedAddons([...selectedAddons, addon]);
+  };
 
   // Calculate total price with addons
   const getCustomizedPrice = () => {
@@ -273,13 +309,11 @@ const toggleAddon = (addon) => {
   };
 
   const addToCart = (item, customizations = {}) => {
-    // If it's a mains item, open customization modal
     if (item.category === 'mains') {
       openCustomizationModal(item);
       return;
     }
 
-    // For other items, add directly
     const cartItem = {
       ...item,
       ...customizations,
@@ -356,7 +390,8 @@ const toggleAddon = (addon) => {
       alert('Warning: Order not saved to database. Please check your internet connection or contact support.');
     }
     
-    setCurrentStep('receipt');
+    saveSession('receipt'); // persist after order submit
+    gotoStep('receipt');
   };
 
   const printOrder = () => {
@@ -365,14 +400,14 @@ const toggleAddon = (addon) => {
 
   const downloadReceiptAsImage = async () => {
     try {
-      const receiptElement = document.getElementById("receipt"); // your receipt wrapper
+      const receiptElement = document.getElementById("receipt");
       if (!receiptElement) {
         alert("Receipt not found");
         return;
       }
 
       const canvas = await html2canvas(receiptElement, {
-        scale: 2,  // higher resolution
+        scale: 2,
         useCORS: true
       });
 
@@ -389,13 +424,30 @@ const toggleAddon = (addon) => {
   const startNewOrder = () => {
     setCart([]);
     setCustomerInfo({ name: '', phone: '', address: '', instructions: '' });
-    setCashierInfo({ name: '', id: '', password: '' });
+    // Keep cashier logged in for next order, but clear password
+    setCashierInfo(ci => ({ name: ci.name, id: ci.id, password: '' }));
     setPaymentMethod('cash');
     setDeliveryCharges(0);
-    setCurrentStep('cashier');
     setActiveCategory('mains');
     setOrderNumber(null);
     setLoginError('');
+    // Keep session and move to customer step
+    saveSession('customer');
+    gotoStep('customer');
+  };
+
+  // Optional full logout (if you ever want a "Logout" button)
+  const logout = () => {
+    setCart([]);
+    setCustomerInfo({ name: '', phone: '', address: '', instructions: '' });
+    setCashierInfo({ name: '', id: '', password: '' });
+    setPaymentMethod('cash');
+    setDeliveryCharges(0);
+    setActiveCategory('mains');
+    setOrderNumber(null);
+    setLoginError('');
+    clearSession();
+    gotoStep('cashier');
   };
 
   const MenuItemCard = ({ item }) => (
@@ -615,7 +667,7 @@ const toggleAddon = (addon) => {
             Continue to Customer Details
           </button>
 
-          
+          {/* Optional Logout button (hidden on cashier step) could go here */}
         </div>
       </div>
     );
@@ -739,13 +791,13 @@ const toggleAddon = (addon) => {
 
           <div className="mt-6 flex gap-4">
             <button
-              onClick={() => setCurrentStep('cashier')}
+              onClick={() => gotoStep('cashier')}
               className="flex-1 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
             >
               Back
             </button>
             <button
-              onClick={() => setCurrentStep('menu')}
+              onClick={() => { saveSession('menu'); gotoStep('menu'); }}
               disabled={!customerInfo.name || !customerInfo.phone || (orderType === 'delivery' && !customerInfo.address)}
               className="flex-1 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-300"
             >
@@ -756,6 +808,7 @@ const toggleAddon = (addon) => {
       </div>
     );
   }
+
   // Receipt Step
   if (currentStep === 'receipt') {
     return (
@@ -818,22 +871,21 @@ const toggleAddon = (addon) => {
                     <span className="text-sm font-bold">× PKR {item.finalPrice}</span>
                   </div>
 
-                 {item.sauces && item.sauces.length > 0 && (
-                  <div className="mt-1 text-xs text-blue-700">
-                    Sauces: {item.sauces.map((sauce, idx) =>
-                      typeof sauce === "string" ? sauce : sauce.name
-                    ).join(", ")}
-                  </div>
-                )}
+                  {item.sauces && item.sauces.length > 0 && (
+                    <div className="mt-1 text-xs text-blue-700">
+                      Sauces: {item.sauces.map((sauce) =>
+                        typeof sauce === "string" ? sauce : sauce.name
+                      ).join(", ")}
+                    </div>
+                  )}
 
-                {item.addons && item.addons.length > 0 && (
-                  <div className="mt-1 text-xs text-green-700">
-                    Add-ons: {item.addons.map((addon, idx) =>
-                      typeof addon === "string" ? addon : addon.name
-                    ).join(", ")}
-                  </div>
-                )}
-
+                  {item.addons && item.addons.length > 0 && (
+                    <div className="mt-1 text-xs text-green-700">
+                      Add-ons: {item.addons.map((addon) =>
+                        typeof addon === "string" ? addon : addon.name
+                      ).join(", ")}
+                    </div>
+                  )}
 
                   {/* Remarks */}
                   {item.remarks && (
@@ -1033,7 +1085,7 @@ const toggleAddon = (addon) => {
 
           <div className="flex gap-4">
             <button
-              onClick={() => setCurrentStep('menu')}
+              onClick={() => { saveSession('menu'); gotoStep('menu'); }}
               className="flex-1 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
             >
               Back to Menu
@@ -1065,7 +1117,7 @@ const toggleAddon = (addon) => {
               </div>
               <div className="relative">
                 <button
-                  onClick={() => cart.length > 0 && setCurrentStep('confirm')}
+                  onClick={() => cart.length > 0 && (saveSession('confirm'), gotoStep('confirm'))}
                   disabled={cart.length === 0}
                   className="flex items-center gap-3 bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 disabled:bg-gray-300 transition-colors"
                 >
@@ -1103,11 +1155,21 @@ const toggleAddon = (addon) => {
                 
                 <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t">
                   <button
-                    onClick={() => setCurrentStep('customer')}
+                    onClick={() => { saveSession('customer'); gotoStep('customer'); }}
                     className="w-full text-left p-2 sm:p-3 rounded-lg bg-blue-50 hover:bg-blue-100 flex items-center gap-2 sm:gap-3"
                   >
                     <User size={18} />
                     <span className="font-medium text-sm sm:text-base">Edit Customer Info</span>
+                  </button>
+                </div>
+
+                {/* Optional logout for kiosk supervisor */}
+                <div className="mt-4">
+                  <button
+                    onClick={logout}
+                    className="w-full text-left p-2 sm:p-3 rounded-lg bg-red-50 hover:bg-red-100 text-red-700"
+                  >
+                    Logout Cashier
                   </button>
                 </div>
               </div>
@@ -1130,7 +1192,7 @@ const toggleAddon = (addon) => {
 
           {/* Cart Sidebar */}
           {cart.length > 0 && (
-            <div className="fixed right-2 sm:right-4 top-4 w-72 sm:w-80 bg-white rounded-lg shadow-2xl p-3 sm:p-4 z-40 max-h-[90vh] overflow-y-auto">
+            <div className="fixed right-2 sm:right-4 top-4 w-72 sm:w-80 bg-white rounded-lg shadow-2xl p-3 sm:4 z-40 max-h-[90vh] overflow-y-auto">
               <h3 className="font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2 sticky top-0 bg-white pb-2">
                 <ShoppingCart size={18} />
                 Current Order
@@ -1187,7 +1249,7 @@ const toggleAddon = (addon) => {
                   <span>PKR {getTotalPrice()}</span>
                 </div>
                 <button
-                  onClick={() => setCurrentStep('confirm')}
+                  onClick={() => { saveSession('confirm'); gotoStep('confirm'); }}
                   className="w-full bg-orange-500 text-white py-2 text-sm rounded-lg hover:bg-orange-600 transition-colors"
                 >
                   Review Order
