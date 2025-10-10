@@ -140,9 +140,7 @@ function Kitchen() {
               Log In
             </button>
           </div>
-          <p className="text-xs text-gray-500 text-center mt-4">
-            Demo credentials: <strong>kitchen / 123</strong>
-          </p>
+          
         </div>
       </div>
     );
