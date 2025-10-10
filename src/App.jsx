@@ -563,19 +563,7 @@ const handleLogin = () => {
   </div>
 </div>
 
-<button
-  onClick={handleLogin}
-  disabled={!cashierInfo.id || !cashierInfo.password}
-  className="w-full mt-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-300 transition-colors font-semibold"
->
-  Login
-</button>
 
-{loginError && (
-  <p className="mt-3 text-center text-red-600 font-semibold text-sm">
-    {loginError}
-  </p>
-)}
 
           
           <button
