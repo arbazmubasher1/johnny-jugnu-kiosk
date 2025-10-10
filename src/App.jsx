@@ -37,38 +37,43 @@ function App() {
   const [loginError, setLoginError] = useState(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const handleLogin = async () => {
-    setLoginError(null);
-    setIsLoggingIn(true);
+const handleLogin = async () => {
+  setLoginError(null);
+  setIsLoggingIn(true);
 
-    try {
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/users?cashier_id=eq.${cashierInfo.id}&password=eq.${cashierInfo.password}`,
-        {
-          method: 'GET',
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          },
-        }
-      );
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/users?cashier_id=eq.${cashierInfo.id}&password=eq.${cashierInfo.password}`;
+    console.log("🔍 Checking Supabase URL:", url);
 
-      const data = await response.json();
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+    });
 
-      if (response.ok && data.length > 0) {
-        const user = data[0];
-        setCashierInfo({ id: user.cashier_id, name: user.cashier_name });
-        setCurrentStep('customer');
-      } else {
-        setLoginError('Invalid cashier ID or password');
-      }
-    } catch (error) {
-      console.error('Error verifying login:', error);
-      setLoginError('Network error. Please try again.');
-    } finally {
-      setIsLoggingIn(false);
+    const data = await response.json();
+    console.log("🧾 Supabase response:", data);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
-  };
+
+    if (data && Array.isArray(data) && data.length > 0) {
+      const user = data[0];
+      setCashierInfo({ id: user.cashier_id, name: user.cashier_name });
+      setCurrentStep('customer');
+    } else {
+      setLoginError('❌ Invalid cashier ID or password');
+    }
+  } catch (error) {
+    console.error('Error verifying login:', error);
+    setLoginError('⚠️ Network or configuration error. Please try again.');
+  } finally {
+    setIsLoggingIn(false);
+  }
+};
 
   // --- SUPABASE ORDER SUBMISSION ---
   const submitToSupabase = async (orderData) => {
