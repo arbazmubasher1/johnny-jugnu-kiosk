@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-// ✅ Supabase connection (CRA style)
+// ✅ Supabase connection
 const SUPABASE_URL =
   process.env.REACT_APP_SUPABASE_URL ||
   "https://lugtmmcpcgzyytkzqozn.supabase.co";
@@ -15,11 +15,12 @@ function Kitchen() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(
+    localStorage.getItem("kitchenLoggedIn") === "true"
+  );
   const [loginInfo, setLoginInfo] = useState({ id: "", password: "" });
   const [loginError, setLoginError] = useState("");
 
-  // Hardcoded login credentials
   const HARD_CODED_USER = { id: "kitchen", password: "123" };
 
   // ✅ Handle login
@@ -28,6 +29,7 @@ function Kitchen() {
       loginInfo.id.trim().toLowerCase() === HARD_CODED_USER.id &&
       loginInfo.password === HARD_CODED_USER.password
     ) {
+      localStorage.setItem("kitchenLoggedIn", "true");
       setLoggedIn(true);
       setLoginError("");
     } else {
@@ -35,7 +37,14 @@ function Kitchen() {
     }
   };
 
-  // ✅ Fetch latest active orders
+  // ✅ Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem("kitchenLoggedIn");
+    setLoggedIn(false);
+    setOrders([]);
+  };
+
+  // ✅ Fetch active orders
   async function fetchOrders() {
     setLoading(true);
     const { data, error } = await supabase
@@ -69,11 +78,11 @@ function Kitchen() {
     }
   }
 
-  // ✅ Setup real-time subscription
+  // ✅ Realtime subscription
   useEffect(() => {
     if (!loggedIn) return;
 
-    console.log("🔌 Setting up Supabase Realtime connection...");
+    console.log("🔌 Setting up Supabase Realtime...");
     fetchOrders();
 
     const channel = supabase
@@ -107,17 +116,17 @@ function Kitchen() {
       .subscribe();
 
     return () => {
-      console.log("🧹 Cleaning up Realtime connection...");
+      console.log("🧹 Cleaning up Realtime...");
       supabase.removeChannel(channel);
       supabase.removeAllChannels();
     };
   }, [loggedIn]);
 
-  // ✅ Auto-refresh backup every 30s
+  // ✅ Auto-refresh every 30 s
   useEffect(() => {
     if (!loggedIn) return;
     const interval = setInterval(() => {
-      console.log("🔄 Auto-refresh backup triggered");
+      console.log("🔄 Backup refresh triggered");
       fetchOrders();
     }, 30000);
     return () => clearInterval(interval);
@@ -147,9 +156,7 @@ function Kitchen() {
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold mb-2">
-                Password
-              </label>
+              <label className="block text-sm font-semibold mb-2">Password</label>
               <input
                 type="password"
                 value={loginInfo.password}
@@ -184,21 +191,24 @@ function Kitchen() {
   return (
     <div className="min-h-screen bg-gray-900 p-4 sm:p-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-lg shadow-xl p-4 sm:p-6 mb-6">
-        <h1 className="text-2xl sm:text-4xl font-black text-white text-center mb-2">
-          🍔 KITCHEN DISPLAY
-        </h1>
-        <div className="text-center text-white text-sm sm:text-base">
-          <p className="font-semibold">
-            Active Orders: <span className="text-2xl">{orders.length}</span>
-          </p>
-          <p className="text-xs mt-1 opacity-80">
+      <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-lg shadow-xl p-4 sm:p-6 mb-6 flex justify-between items-center">
+        <div className="text-white text-center flex-1">
+          <h1 className="text-2xl sm:text-4xl font-black mb-1">
+            🍔 KITCHEN DISPLAY
+          </h1>
+          <p className="text-xs sm:text-sm opacity-80">
             Last updated: {lastUpdate.toLocaleTimeString()}
           </p>
         </div>
+        <button
+          onClick={handleLogout}
+          className="bg-white text-red-600 font-bold px-4 py-2 rounded-lg shadow-md hover:bg-gray-100 transition"
+        >
+          Logout
+        </button>
       </div>
 
-      {/* Manual Refresh */}
+      {/* Refresh */}
       <div className="text-center mb-6">
         <button
           onClick={fetchOrders}
@@ -209,7 +219,7 @@ function Kitchen() {
         </button>
       </div>
 
-      {/* Orders */}
+      {/* Orders Grid */}
       {loading && orders.length === 0 ? (
         <div className="text-center text-white text-lg py-20">
           <div className="animate-spin text-6xl mb-4">⏳</div>
@@ -332,7 +342,7 @@ function Kitchen() {
                 <p className="text-2xl font-black">PKR {order.grand_total}</p>
               </div>
 
-              {/* Status Badge */}
+              {/* Status */}
               <div className="mb-3 text-center">
                 <span
                   className={`px-4 py-2 rounded-lg text-white text-sm font-black inline-block ${
@@ -351,7 +361,7 @@ function Kitchen() {
                 </span>
               </div>
 
-              {/* Action Buttons */}
+              {/* Actions */}
               <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={() => updateOrderStatus(order.id, "Confirmed")}
