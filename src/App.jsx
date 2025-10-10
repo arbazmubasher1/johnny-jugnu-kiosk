@@ -3,8 +3,6 @@ import { ShoppingCart, Plus, Minus, Trash2, Clock, MapPin, User, X } from 'lucid
 import html2canvas from "html2canvas";
 import './App.css';
 
-
-
 function App() {
   const [cart, setCart] = useState([]);
   const [activeCategory, setActiveCategory] = useState('mains');
@@ -17,18 +15,29 @@ function App() {
   });
   const [cashierInfo, setCashierInfo] = useState({
     name: '',
-    id: ''
+    id: '',
+    password: ''
   });
+  const [loginError, setLoginError] = useState(''); // shows invalid creds message
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [currentStep, setCurrentStep] = useState('cashier');
   const [deliveryCharges, setDeliveryCharges] = useState(0);
   const [orderNumber, setOrderNumber] = useState(null);
-  
+
   // Customization modal state
   const [showCustomizationModal, setShowCustomizationModal] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
   const [selectedSauces, setSelectedSauces] = useState([]);
   const [selectedAddons, setSelectedAddons] = useState([]);
+
+  // ---- Hardcoded credentials (for kiosk/dev only) ----
+  // WARNING: Hardcoding credentials is insecure. Use this only for offline/dev kiosk mode.
+  const HARD_CODED_USERS = {
+    spider: '123',
+    lupin: '123',
+    wehshi: '123'
+  };
+  // ----------------------------------------------------
 
   const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://lugtmmcpcgzyytkzqozn.supabase.co';
   const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1Z3RtbWNwY2d6eXl0a3pxb3puIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzODk0MDQsImV4cCI6MjA3NDk2NTQwNH0.uSEDsRNpH_QGwgGxrrxuYKCkuH3lszd8O9w7GN9INpE';
@@ -176,6 +185,33 @@ function App() {
     { id: 'lemonades', name: 'Lemonades', icon: '🥤' }
   ];
 
+  // ---- Login handler using hardcoded creds ----
+  const handleLogin = () => {
+    const enteredId = (cashierInfo.id || '').trim().toLowerCase();
+    const enteredPassword = (cashierInfo.password || '').toString();
+
+    if (!enteredId || !enteredPassword) {
+      setLoginError('Please enter both Cashier ID and Password.');
+      return;
+    }
+
+    if (HARD_CODED_USERS[enteredId] && HARD_CODED_USERS[enteredId] === enteredPassword) {
+      // success
+      setLoginError('');
+      // If user didn't type a display name, set it from id capitalized.
+      if (!cashierInfo.name || cashierInfo.name.trim() === '') {
+        const displayName = enteredId.charAt(0).toUpperCase() + enteredId.slice(1);
+        setCashierInfo(ci => ({ ...ci, name: displayName }));
+      }
+      // clear password in state for safety
+      setCashierInfo(ci => ({ ...ci, password: '' }));
+      setCurrentStep('customer');
+    } else {
+      setLoginError('Invalid cashier ID or password.');
+    }
+  };
+  // ----------------------------------------------------
+
   // Open customization modal for mains items
   const openCustomizationModal = (item) => {
     setCurrentItem(item);
@@ -186,13 +222,18 @@ function App() {
 
   // Toggle sauce selection (max 2)
  const toggleSauce = (sauce) => {
+  if (selectedSauces.find(s => s.id === sauce.id)) {
+    // deselect
+    setSelectedSauces(selectedSauces.filter(s => s.id !== sauce.id));
+    return;
+  }
+
   if (selectedSauces.length < 2) {
-    setSelectedSauces([...selectedSauces, sauce]); // push duplicate
+    setSelectedSauces([...selectedSauces, sauce]);
   } else {
     alert("You can only select 2 sauces total");
   }
 };
-
 
   // Toggle addon selection
   const toggleAddon = (addon) => {
@@ -288,7 +329,7 @@ function App() {
     const orderData = {
       orderNumber: newOrderNumber,
       timestamp: new Date().toISOString(),
-      cashier: cashierInfo,
+      cashier: { name: cashierInfo.name, id: cashierInfo.id },
       customer: customerInfo,
       orderType,
       paymentMethod,
@@ -324,39 +365,39 @@ function App() {
     window.print();
   };
 
-
   const downloadReceiptAsImage = async () => {
-  try {
-    const receiptElement = document.getElementById("receipt"); // your receipt wrapper
-    if (!receiptElement) {
-      alert("Receipt not found");
-      return;
+    try {
+      const receiptElement = document.getElementById("receipt"); // your receipt wrapper
+      if (!receiptElement) {
+        alert("Receipt not found");
+        return;
+      }
+
+      const canvas = await html2canvas(receiptElement, {
+        scale: 2,  // higher resolution
+        useCORS: true
+      });
+
+      const link = document.createElement("a");
+      link.download = `JJ_Order_${orderNumber}_${new Date().toISOString().slice(0, 10)}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (error) {
+      console.error("Error capturing receipt:", error);
+      alert("Failed to download receipt. Try printing instead.");
     }
-
-    const canvas = await html2canvas(receiptElement, {
-      scale: 2,  // higher resolution
-      useCORS: true
-    });
-
-    const link = document.createElement("a");
-    link.download = `JJ_Order_${orderNumber}_${new Date().toISOString().slice(0, 10)}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-  } catch (error) {
-    console.error("Error capturing receipt:", error);
-    alert("Failed to download receipt. Try printing instead.");
-  }
-};
+  };
 
   const startNewOrder = () => {
     setCart([]);
     setCustomerInfo({ name: '', phone: '', address: '', instructions: '' });
-    setCashierInfo({ name: '', id: '' });
+    setCashierInfo({ name: '', id: '', password: '' });
     setPaymentMethod('cash');
     setDeliveryCharges(0);
     setCurrentStep('cashier');
     setActiveCategory('mains');
     setOrderNumber(null);
+    setLoginError('');
   };
 
   const MenuItemCard = ({ item }) => (
@@ -534,8 +575,7 @@ function App() {
                 value={cashierInfo.name}
                 onChange={(e) => setCashierInfo({...cashierInfo, name: e.target.value})}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter your name"
-                required
+                placeholder="Enter your display name (optional)"
               />
             </div>
             
@@ -546,19 +586,40 @@ function App() {
                 value={cashierInfo.id}
                 onChange={(e) => setCashierInfo({...cashierInfo, id: e.target.value})}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter your ID"
+                placeholder="e.g., spider, lupin, wehshi"
                 required
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Password *</label>
+              <input
+                type="password"
+                value={cashierInfo.password}
+                onChange={(e) => setCashierInfo({...cashierInfo, password: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Enter password"
+                required
+              />
+            </div>
+
+            {loginError && (
+              <div className="text-sm text-red-600 font-semibold">
+                {loginError}
+              </div>
+            )}
           </div>
           
           <button
-            onClick={() => setCurrentStep('customer')}
-            disabled={!cashierInfo.name || !cashierInfo.id}
-            className="w-full mt-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-300 transition-colors font-semibold"
+            onClick={handleLogin}
+            className="w-full mt-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold"
           >
             Continue to Customer Details
           </button>
+
+          <div className="mt-3 text-xs text-gray-500">
+            <strong>Dev kiosk creds:</strong> spider/123 • lupin/123 • wehshi/123
+          </div>
         </div>
       </div>
     );
@@ -701,161 +762,160 @@ function App() {
   }
   // Receipt Step
   if (currentStep === 'receipt') {
-  return (
-    <div className="max-w-md mx-auto p-4 bg-white min-h-screen print:shadow-none" id="receipt">
-      {/* Header */}
-      <div className="text-center border-b-4 border-double border-black pb-4 mb-6">
-        <h1 className="text-3xl font-black text-black mb-2">JOHNNY & JUGNU</h1>
-        <p className="text-base font-bold text-gray-800">OFFICIAL RECEIPT</p>
-        <div className="bg-white text-black px-4 py-2 mt-3 inline-block rounded">
-          <p className="text-xl font-black">ORDER #JJ{orderNumber}</p>
+    return (
+      <div className="max-w-md mx-auto p-4 bg-white min-h-screen print:shadow-none" id="receipt">
+        {/* Header */}
+        <div className="text-center border-b-4 border-double border-black pb-4 mb-6">
+          <h1 className="text-3xl font-black text-black mb-2">JOHNNY & JUGNU</h1>
+          <p className="text-base font-bold text-gray-800">OFFICIAL RECEIPT</p>
+          <div className="bg-white text-black px-4 py-2 mt-3 inline-block rounded">
+            <p className="text-xl font-black">ORDER #JJ{orderNumber}</p>
+          </div>
+          <p className="text-sm font-semibold mt-2">{new Date().toLocaleString()}</p>
         </div>
-        <p className="text-sm font-semibold mt-2">{new Date().toLocaleString()}</p>
-      </div>
 
-      {/* Staff & Customer Info */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-blue-50 p-3 rounded-lg border-2 border-blue-200">
-          <h3 className="font-black text-blue-800 mb-2 text-sm">CASHIER DETAILS</h3>
-          <p className="text-xs font-bold">Name: {cashierInfo.name}</p>
-          <p className="text-xs font-bold">ID: {cashierInfo.id}</p>
+        {/* Staff & Customer Info */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-blue-50 p-3 rounded-lg border-2 border-blue-200">
+            <h3 className="font-black text-blue-800 mb-2 text-sm">CASHIER DETAILS</h3>
+            <p className="text-xs font-bold">Name: {cashierInfo.name}</p>
+            <p className="text-xs font-bold">ID: {cashierInfo.id}</p>
+          </div>
+          <div className="bg-green-50 p-3 rounded-lg border-2 border-green-200">
+            <h3 className="font-black text-green-800 mb-2 text-sm">CUSTOMER INFO</h3>
+            <p className="text-xs font-bold">Name: {customerInfo.name}</p>
+            <p className="text-xs font-bold">Phone: {customerInfo.phone}</p>
+          </div>
         </div>
-        <div className="bg-green-50 p-3 rounded-lg border-2 border-green-200">
-          <h3 className="font-black text-green-800 mb-2 text-sm">CUSTOMER INFO</h3>
-          <p className="text-xs font-bold">Name: {customerInfo.name}</p>
-          <p className="text-xs font-bold">Phone: {customerInfo.phone}</p>
+
+        {/* Order Details */}
+        <div className="bg-orange-50 p-3 rounded-lg border-2 border-orange-200 mb-6">
+          <div className="grid grid-cols-2 gap-2 text-xs font-bold">
+            <p>Type: <span className="text-orange-800">{orderType.toUpperCase()}</span></p>
+            <p>Payment: <span className="text-orange-800">{paymentMethod === 'cash' ? 'CASH' : paymentMethod === 'credit' ? 'CREDIT CARD' : 'ONLINE PAYMENT'}</span></p>
+            {orderType === 'delivery' && customerInfo.address && (
+              <p className="col-span-2">Address: <span className="text-orange-800">{customerInfo.address}</span></p>
+            )}
+            {customerInfo.instructions && (
+              <p className="col-span-2">Instructions: <span className="text-orange-800">{customerInfo.instructions}</span></p>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Order Details */}
-      <div className="bg-orange-50 p-3 rounded-lg border-2 border-orange-200 mb-6">
-        <div className="grid grid-cols-2 gap-2 text-xs font-bold">
-          <p>Type: <span className="text-orange-800">{orderType.toUpperCase()}</span></p>
-          <p>Payment: <span className="text-orange-800">{paymentMethod === 'cash' ? 'CASH' : paymentMethod === 'credit' ? 'CREDIT CARD' : 'ONLINE PAYMENT'}</span></p>
-          {orderType === 'delivery' && customerInfo.address && (
-            <p className="col-span-2">Address: <span className="text-orange-800">{customerInfo.address}</span></p>
-          )}
-          {customerInfo.instructions && (
-            <p className="col-span-2">Instructions: <span className="text-orange-800">{customerInfo.instructions}</span></p>
-          )}
-        </div>
-      </div>
+        {/* Order Items */}
+        <div className="border-4 border-double border-black p-4 mb-6">
+          <h3 className="font-black text-lg mb-4 text-center bg-black text-white py-2 -mx-4 -mt-4 mb-4">ORDER ITEMS</h3>
+          {cart.map((item, index) => (
+            <div key={index} className="mb-4 pb-3 border-b-2 border-dashed border-gray-400 last:border-b-0">
+              <div className="flex justify-between items-start mb-2">
+                <div className="flex-1">
+                  <p className="font-black text-base">{item.name}</p>
 
-      {/* Order Items */}
-      <div className="border-4 border-double border-black p-4 mb-6">
-        <h3 className="font-black text-lg mb-4 text-center bg-black text-white py-2 -mx-4 -mt-4 mb-4">ORDER ITEMS</h3>
-        {cart.map((item, index) => (
-          <div key={index} className="mb-4 pb-3 border-b-2 border-dashed border-gray-400 last:border-b-0">
-            <div className="flex justify-between items-start mb-2">
-              <div className="flex-1">
-                <p className="font-black text-base">{item.name}</p>
+                  {item.withSeasoning && (
+                    <span className="bg-green-500 text-white px-2 py-1 text-xs font-bold rounded">
+                      WITH SEASONING
+                    </span>
+                  )}
 
-                {item.withSeasoning && (
-                  <span className="bg-green-500 text-white px-2 py-1 text-xs font-bold rounded">
-                    WITH SEASONING
-                  </span>
-                )}
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="bg-blue-500 text-white px-2 py-1 text-xs font-bold rounded">QTY: {item.quantity}</span>
+                    <span className="text-sm font-bold">× PKR {item.finalPrice}</span>
+                  </div>
 
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="bg-blue-500 text-white px-2 py-1 text-xs font-bold rounded">QTY: {item.quantity}</span>
-                  <span className="text-sm font-bold">× PKR {item.finalPrice}</span>
-                </div>
-
-               {item.sauces && item.sauces.length > 0 && (
-  <div className="mt-1 text-xs text-blue-700">
-    Sauces: {item.sauces.map((sauce, idx) =>
-      typeof sauce === "string" ? sauce : sauce.name
-    ).join(", ")}
-  </div>
-)}
-
-{item.addons && item.addons.length > 0 && (
-  <div className="mt-1 text-xs text-green-700">
-    Add-ons: {item.addons.map((addon, idx) =>
-      typeof addon === "string" ? addon : addon.name
-    ).join(", ")}
-  </div>
-)}
-
-
-                {/* Remarks */}
-                {item.remarks && (
-                  <div className="mt-2 bg-yellow-100 p-2 rounded border border-yellow-400">
-                    <p className="text-xs font-bold text-yellow-800">REMARKS: {item.remarks}</p>
+                 {item.sauces && item.sauces.length > 0 && (
+                  <div className="mt-1 text-xs text-blue-700">
+                    Sauces: {item.sauces.map((sauce, idx) =>
+                      typeof sauce === "string" ? sauce : sauce.name
+                    ).join(", ")}
                   </div>
                 )}
-              </div>
 
-              <div className="text-right ml-2">
-                <p className="font-black text-lg">PKR {item.finalPrice * item.quantity}</p>
+                {item.addons && item.addons.length > 0 && (
+                  <div className="mt-1 text-xs text-green-700">
+                    Add-ons: {item.addons.map((addon, idx) =>
+                      typeof addon === "string" ? addon : addon.name
+                    ).join(", ")}
+                  </div>
+                )}
+
+
+                  {/* Remarks */}
+                  {item.remarks && (
+                    <div className="mt-2 bg-yellow-100 p-2 rounded border border-yellow-400">
+                      <p className="text-xs font-bold text-yellow-800">REMARKS: {item.remarks}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-right ml-2">
+                  <p className="font-black text-lg">PKR {item.finalPrice * item.quantity}</p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      {/* Totals */}
-      <div className="bg-gray-100 p-4 rounded-lg border-4 border-double border-gray-800 mb-6">
-        <div className="space-y-2">
-          <div className="flex justify-between items-center text-base font-bold">
-            <span>SUBTOTAL:</span>
-            <span>PKR {cart.reduce((total, item) => total + (item.finalPrice * item.quantity), 0)}</span>
-          </div>
-          {deliveryCharges > 0 && (
-            <div className="flex justify-between items-center text-base font-bold text-blue-600">
-              <span>DELIVERY CHARGES:</span>
-              <span>PKR {deliveryCharges}</span>
+        {/* Totals */}
+        <div className="bg-gray-100 p-4 rounded-lg border-4 border-double border-gray-800 mb-6">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-base font-bold">
+              <span>SUBTOTAL:</span>
+              <span>PKR {cart.reduce((total, item) => total + (item.finalPrice * item.quantity), 0)}</span>
             </div>
-          )}
-          <div className="border-t-4 border-double border-black pt-2 mt-3">
-            <div className="flex justify-between items-center">
-              <span className="text-2xl font-black">GRAND TOTAL:</span>
-              <span className="text-2xl font-black bg-black text-white px-4 py-2 rounded">PKR {getTotalPrice()}</span>
+            {deliveryCharges > 0 && (
+              <div className="flex justify-between items-center text-base font-bold text-blue-600">
+                <span>DELIVERY CHARGES:</span>
+                <span>PKR {deliveryCharges}</span>
+              </div>
+            )}
+            <div className="border-t-4 border-double border-black pt-2 mt-3">
+              <div className="flex justify-between items-center">
+                <span className="text-2xl font-black">GRAND TOTAL:</span>
+                <span className="text-2xl font-black bg-black text-white px-4 py-2 rounded">PKR {getTotalPrice()}</span>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Footer */}
+        <div className="text-center border-4 border-double border-black p-4 mb-6">
+          <p className="font-black text-lg mb-2">THANK YOU FOR YOUR ORDER!</p>
+          <p className="font-bold text-base text-orange-600">Estimated Time: 15-20 minutes</p>
+          <p className="text-xs font-bold mt-2 text-gray-600">Order saved to system database</p>
+        </div>
+
+        <div className="flex gap-2 print:hidden">
+          <button
+            onClick={printOrder}
+            className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold"
+          >
+            🖨️ PRINT
+          </button>
+          <button
+            onClick={downloadReceiptAsImage}
+            className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold"
+          >
+            💾 DOWNLOAD
+          </button>
+          <button
+            onClick={startNewOrder}
+            className="flex-1 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-bold"
+          >
+            ➕ NEW ORDER
+          </button>
+        </div>
+
+        <style jsx>{`
+          @media print {
+            body { margin: 0; }
+            #receipt { box-shadow: none !important; }
+            .print\\:hidden { display: none !important; }
+            .print\\:shadow-none { box-shadow: none !important; }
+          }
+        `}</style>
       </div>
-
-      {/* Footer */}
-      <div className="text-center border-4 border-double border-black p-4 mb-6">
-        <p className="font-black text-lg mb-2">THANK YOU FOR YOUR ORDER!</p>
-        <p className="font-bold text-base text-orange-600">Estimated Time: 15-20 minutes</p>
-        <p className="text-xs font-bold mt-2 text-gray-600">Order saved to system database</p>
-      </div>
-
-      <div className="flex gap-2 print:hidden">
-        <button
-          onClick={printOrder}
-          className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold"
-        >
-          🖨️ PRINT
-        </button>
-        <button
-          onClick={downloadReceiptAsImage}
-          className="flex-1 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold"
-        >
-          💾 DOWNLOAD
-        </button>
-        <button
-          onClick={startNewOrder}
-          className="flex-1 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-bold"
-        >
-          ➕ NEW ORDER
-        </button>
-      </div>
-
-      <style jsx>{`
-        @media print {
-          body { margin: 0; }
-          #receipt { box-shadow: none !important; }
-          .print\\:hidden { display: none !important; }
-          .print\\:shadow-none { box-shadow: none !important; }
-        }
-      `}</style>
-    </div>
-  );
-}
-
+    );
+  }
 
   // Order Confirmation Step
   if (currentStep === 'confirm') {
