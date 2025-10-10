@@ -538,38 +538,59 @@ const handleLogin = () => {
           </h2>
           
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Cashier Name *</label>
-              <input
-                type="text"
-                value={cashierInfo.name}
-                onChange={(e) => setCashierInfo({...cashierInfo, name: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter your name"
-                required
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-2">Cashier ID *</label>
-              <input
-                type="text"
-                value={cashierInfo.id}
-                onChange={(e) => setCashierInfo({...cashierInfo, id: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                placeholder="Enter your ID"
-                required
-              />
-            </div>
-          </div>
+  <div>
+    <label className="block text-sm font-medium mb-2">Cashier ID *</label>
+    <input
+      type="text"
+      value={cashierInfo.id}
+      onChange={(e) => setCashierInfo({ ...cashierInfo, id: e.target.value })}
+      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+      placeholder="Enter your ID"
+      required
+    />
+  </div>
+
+  <div>
+    <label className="block text-sm font-medium mb-2">Password *</label>
+    <input
+      type="password"
+      value={cashierInfo.password}
+      onChange={(e) => setCashierInfo({ ...cashierInfo, password: e.target.value })}
+      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+      placeholder="Enter password"
+      required
+    />
+  </div>
+</div>
+
+<button
+  onClick={handleLogin}
+  disabled={!cashierInfo.id || !cashierInfo.password}
+  className="w-full mt-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-300 transition-colors font-semibold"
+>
+  Login
+</button>
+
+{loginError && (
+  <p className="mt-3 text-center text-red-600 font-semibold text-sm">
+    {loginError}
+  </p>
+)}
+
           
           <button
-            onClick={() => setCurrentStep('customer')}
-            disabled={!cashierInfo.name || !cashierInfo.id}
-            className="w-full mt-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-300 transition-colors font-semibold"
-          >
-            Continue to Customer Details
-          </button>
+  onClick={handleLogin}
+  disabled={!cashierInfo.id || !cashierInfo.password}
+  className="w-full mt-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-300 transition-colors font-semibold"
+>
+  Login
+</button>
+
+{loginError && (
+  <p className="mt-3 text-center text-red-600 font-semibold text-sm">
+    {loginError}
+  </p>
+)}
         </div>
       </div>
     );
